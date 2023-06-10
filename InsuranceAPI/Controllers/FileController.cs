@@ -22,9 +22,34 @@ namespace InsuranceAPI.Controllers {
 
         [HttpPost,DisableRequestSizeLimit]
         [Route("upload")]
-        public IActionResult reader(IFormFile file) {
-            List<Insured>? ret = _service.parseFile(file);
-            return ret != null ? Ok(ret) : StatusCode(StatusCodes.Status406NotAcceptable);
+        public IActionResult upload(IFormFile file) {
+            ExcelDataResultDTO ret = _service.parseFile(file);
+            return Ok(ret);
+        }
+
+        [HttpGet]
+        [Route("store")]
+        public IActionResult store() {
+            try {
+                _service.storeParsed();
+                return Ok();
+            } catch (Exception ex) {
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError, 
+                    ex.Message);
+            }
+        }
+
+        [HttpDelete]
+        [Route("cancel")]
+        public IActionResult cancel() {
+            try{
+                _service.cancelParsed();
+                return Ok();
+            } catch(Exception ex){
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ex.Message);
+            }
         }
     }
 }

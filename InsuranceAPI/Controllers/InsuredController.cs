@@ -42,7 +42,7 @@ namespace InsuranceAPI.Controllers {
         public IActionResult create([FromBody] Insured insured) {
             if(insured == null)
                 return BadRequest();
-            bool ret = _service.create(insured);
+            bool ret = _service.create(insured,true);
             return ret ? Ok() : StatusCode(500);
         }
 
@@ -58,7 +58,7 @@ namespace InsuranceAPI.Controllers {
         [HttpDelete]
         [Route("delete/{id:long}")]
         public IActionResult delete(long id) {
-            bool ret = _service.delete(id);
+            bool ret = _service.delete(id,true);
             return ret ? Ok() : StatusCode(500);
         }
 

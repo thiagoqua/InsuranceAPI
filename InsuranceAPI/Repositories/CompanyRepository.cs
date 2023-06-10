@@ -3,6 +3,7 @@
 namespace InsuranceAPI.Repositories {
     public interface ICompanyRepository {
         public List<Company> getAll();
+        public Company? getById(long id);
     }
 
     public class CompanyRepository : ICompanyRepository {
@@ -14,6 +15,10 @@ namespace InsuranceAPI.Repositories {
 
         public List<Company> getAll() {
             return _context.Companies.ToList();
+        }
+
+        public Company? getById(long id) {
+            return _context.Companies.FirstOrDefault(c => c.Id == id);
         }
     }
 }

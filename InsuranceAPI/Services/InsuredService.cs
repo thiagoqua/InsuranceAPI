@@ -1,15 +1,18 @@
 ﻿using InsuranceAPI.Models;
 using InsuranceAPI.Repositories;
 using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Asn1.Esf;
 
 namespace InsuranceAPI.Services {
     public interface IInsuredService {
         public List<Insured> getAll();
         public List<Insured> getFromSearch(string query);
         public Insured? getById(long id);
-        public bool create(Insured insured);
+        public bool create(Insured insured,bool commit);
+        public bool createMultiple(List<Insured> insureds);
         public bool update(Insured insured);
-        public bool delete(long id);
+        public bool delete(long id,bool commit);
+        public bool deleteMultiple(List<long> insuredIds);
     }
 
     public class InsuredService : IInsuredService{
@@ -37,7 +40,7 @@ namespace InsuranceAPI.Services {
             return _insuredRepo.findById(id);
         }
 
-        public bool create(Insured insured) {
+        public bool create(Insured insured,bool commit) {
             Address address = insured.AddressNavigation;
             List<Phone> phones = insured.Phones.ToList();
 
@@ -45,7 +48,7 @@ namespace InsuranceAPI.Services {
             _insuredRepo.create(insured);
             _phoneRepo.createMultiple(phones);
 
-            return _insuredRepo.commit();
+            return commit ? _insuredRepo.commit() : false;
         }
 
         public bool update(Insured insured) {
@@ -60,16 +63,30 @@ namespace InsuranceAPI.Services {
             return _insuredRepo.commit();
         }
 
-        public bool delete(long id) {
+        public bool delete(long id, bool commit) {
             Insured? inCuestion = getById(id);
             bool ret = false;
             if(inCuestion != null){
                 _phoneRepo.deleteByInsured(id);
                 _insuredRepo.delete(id);
                 _addressRepo.delete(inCuestion.Address);
-                ret = _insuredRepo.commit();
+                ret = commit ? _insuredRepo.commit() : false;
             }
             return ret;
+        }
+
+        public bool createMultiple(List<Insured> insureds) {
+            foreach(Insured newOne in insureds) 
+                create(newOne, false);
+
+            return _insuredRepo.commit();
+        }
+
+        public bool deleteMultiple(List<long> insuredIds) {
+            foreach(long id in insuredIds)
+                delete(id, false);
+
+            return _insuredRepo.commit();
         }
     }
 }

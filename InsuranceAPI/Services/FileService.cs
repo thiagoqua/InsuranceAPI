@@ -5,27 +5,47 @@ using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using System.Reflection.Metadata.Ecma335;
 using InsuranceAPI.Repositories;
+using NPOI.XWPF.UserModel;
+using System.Text.Json;
+using Org.BouncyCastle.Crypto.Parameters;
 
 namespace InsuranceAPI.Services {
     public interface IFileService {
-        public List<Insured>? parseFile(IFormFile file);
+        public ExcelDataResultDTO parseFile(IFormFile file);
+        public void storeParsed();
+        public void cancelParsed();
     }
 
     public class FileService : IFileService {
         private readonly IProducerRepository _producerRepository;
+        private readonly ICompanyRepository _companyRepository;
+        private readonly IInsuredService _insuredService;
+        private readonly string filesDir = Path.Combine(
+            System.Environment.CurrentDirectory,
+            "Files");
+        private readonly JsonSerializerOptions JSONopt = new JsonSerializerOptions(){
+            PropertyNameCaseInsensitive = true
+        };
+        private static CancellationTokenSource _cancelationToken;
 
-        public FileService(IProducerRepository producerRepository) {
+        public FileService(IProducerRepository producerRepository,
+                            ICompanyRepository companyRepository,
+                            IInsuredService insuredService) {
             _producerRepository = producerRepository;
+            _companyRepository = companyRepository;
+            _insuredService = insuredService;
         }
 
-        public List<Insured>? parseFile(IFormFile excelFile) {
-            List<Insured> ret = new List<Insured>();
+        public ExcelDataResultDTO parseFile(IFormFile excelFile) {
+            List<Insured> interpreted = new List<Insured>();
+            List<int> nonInterpretedRows = new List<int>();
             Stream stream = excelFile.OpenReadStream();
             IWorkbook workBook;
             ISheet sheet;
             IRow row;
             int rows;
             string extension = Path.GetExtension(excelFile.FileName);
+            string fullDir = Path.Combine(filesDir,"ultimatum.json");
 
             if(extension == ".xlsx")
                 workBook = new XSSFWorkbook(stream);
@@ -38,22 +58,98 @@ namespace InsuranceAPI.Services {
             for(int i = 1; i < rows; i++){
                 row = sheet.GetRow(i);
                 try {
-                    ret.Add(mapFromExcelRow(row,i));
+                    interpreted.Add(mapFromExcelRow(row,i));
                 }
-                catch(MappingException me) {
-                    Console.WriteLine(
-                        "error en fila " + me.ErrorRow + 
-                        " en campo " + me.ErrorCell
-                    );
+                catch(Exception) {
+                    nonInterpretedRows.Add(i);
                 }
             }
             stream.Close();
-            return ret;
+
+            Task.Run(() => {
+                using(FileStream fstream = new FileStream(fullDir, 
+                                                    FileMode.CreateNew)){
+                    List<Insured> toStore = new List<Insured>();
+                    //removing the company object,
+                    //using a deep clone of that
+                    foreach(Insured insured in interpreted){
+                        string serialized = JsonSerializer.Serialize(insured);
+                        Insured toAdd = JsonSerializer
+                            .Deserialize<Insured>(serialized)!;
+                        toAdd.CompanyNavigation = null!;
+                        toAdd.ProducerNavigation = null!;
+                        toStore.Add(toAdd);
+                    }
+                    JsonSerializer.Serialize(fstream, toStore, JSONopt);
+                }
+            });
+            startTimer();
+            return new ExcelDataResultDTO(interpreted,nonInterpretedRows);
+        }
+
+        public void storeParsed() {
+            List<Insured>? toSave;
+            List<Insured> previous = _insuredService.getAll();
+            string ultimatumDir, json, backupDir, fileBackupDir;
+
+            ultimatumDir = Path.Combine(filesDir, "ultimatum.json");
+            json = File.ReadAllText(ultimatumDir);
+            backupDir = Path.Combine(filesDir, "Backups");
+            fileBackupDir = Path.Combine(
+                backupDir,
+                DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".json"
+            );
+
+            if(!File.Exists(ultimatumDir))
+                throw new Exception("there is no parsed file to store");
+
+            toSave = JsonSerializer.Deserialize<List<Insured>>(json, JSONopt);
+
+            if(toSave == null)
+                throw new MappingException("JSON_deserializing");
+
+            //create the backup
+            using(FileStream fstream = new FileStream(fileBackupDir, FileMode.CreateNew)) {
+                JsonSerializer.Serialize(fstream, previous, JSONopt);
+            }
+
+            _insuredService.deleteMultiple(previous.Select(ins => ins.Id)
+                                                    .ToList());
+            _insuredService.createMultiple(toSave);
+            
+            File.Delete(ultimatumDir);
+        }
+
+        public void cancelParsed() {
+            _cancelationToken?.Cancel();
+            removeUltimatum();
+        }
+
+        private void removeUltimatum() {
+            string path = Path.Combine(filesDir, "ultimatum.json");
+
+            if(!File.Exists(path))
+                throw new Exception("there is no parsed file to remove");
+
+            File.Delete(path);
+        }
+
+        /// <summary>
+        ///     This function starts a timer and wait 1 minute after the user has parsed
+        ///     the file. If the user doesn't cancel or confirm the parse, it deletes the
+        ///     'ultimatum.json' file.
+        /// </summary>
+        private void startTimer() {
+            _cancelationToken = new CancellationTokenSource();
+            var timer = Task.Delay(TimeSpan.FromMinutes(1), _cancelationToken.Token)
+                .ContinueWith(t => removeUltimatum());
         }
 
         private Insured mapFromExcelRow(IRow row,int rowNumber) {
             try {
                 string[]? namesPolicy = mapNameOrPolicyFromExcelRow(row.GetCell(3).ToString());
+                Company company = mapCompanyFromExcelRow(row.GetCell(0).CellStyle.FillForegroundColorColor);
+                Producer producer = mapProducerFromExcelRow(row.GetCell(13).ToString());
                 Insured ret = new Insured() {
                     License = mapStringFromExcelRow(row.GetCell(0).ToString()),
                     Folder = mapFolderFromExcelRow(row.GetCell(1).ToString()),
@@ -67,8 +163,10 @@ namespace InsuranceAPI.Services {
                     Phones = mapPhonesFromExcelRow(row.GetCell(10).ToString()),
                     Description = mapDescriptionFromExcelRow(row.GetCell(11).ToString()),
                     Cuit = row.GetCell(12).ToString(),
-                    Producer = mapProducerFromExcelRow(row.GetCell(13).ToString()),
-                    Company = mapCompanyFromExcelRow(row.GetCell(1).CellStyle.FillBackgroundColorColor),
+                    Producer = producer.Id,
+                    ProducerNavigation = producer,
+                    CompanyNavigation = company,
+                    Company = company.Id,
                     Status = mapStringFromExcelRow(row.GetCell(6).ToString())
                 };
                 return ret;
@@ -258,20 +356,36 @@ namespace InsuranceAPI.Services {
             return ret;
         }
 
-        private long mapProducerFromExcelRow(string? cell) {
+        private Producer mapProducerFromExcelRow(string? cell) {
             if(cell == null)
                 throw new MappingException("producer");
-            long? ret = _producerRepository.getIdByFirstName(cell.ToLower());
+
+            Producer? ret = _producerRepository.getByName(cell.ToLower());
             
             if(ret == null)
                 throw new MappingException("producer");
 
-            return (long) ret;
+            return ret;
         }
 
-        private long mapCompanyFromExcelRow(IColor color) {
-            Console.WriteLine("color is " + color.RGB);
-            return 1;
+        private Company mapCompanyFromExcelRow(IColor backgroundColor) {
+            Company? ret;
+            if(backgroundColor == null)
+                throw new MappingException("company");
+            byte R, G, B;
+            R = backgroundColor.RGB[0];
+            G = backgroundColor.RGB[1];
+            B = backgroundColor.RGB[2];
+            //if the cell's color is white, the company is Federación
+            if(R == 255 && G == 255 && B == 255)
+                ret = _companyRepository.getById(2);
+            else
+                ret = _companyRepository.getById(1);
+
+            if(ret == null)
+                throw new MappingException("company");
+
+            return ret;
         }
     }
 }

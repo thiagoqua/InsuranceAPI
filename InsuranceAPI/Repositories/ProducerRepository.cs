@@ -6,7 +6,6 @@ namespace InsuranceAPI.Repositories {
         public Producer getById(long id);
         public List<Producer> getByIds(List<long> ids);
         public Producer? getByName(string name);
-        public long? getIdByFirstName(string name);
     }
 
     public class ProducerRepository : IProducerRepository{
@@ -39,15 +38,6 @@ namespace InsuranceAPI.Repositories {
                                         prod.Lastname.StartsWith(name) ||
                                         (prod.Firstname + " " + prod.Lastname)
                                             .StartsWith(name));
-        }
-
-        public long? getIdByFirstName(string firstName) {
-            Producer? ret = _context.Producers.FirstOrDefault(prod => 
-                                        prod.Firstname.StartsWith(firstName));
-            if(ret != null)
-                return ret.Id;
-            
-            return null;
         }
     }
 }

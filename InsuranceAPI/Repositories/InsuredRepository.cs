@@ -8,6 +8,7 @@ namespace InsuranceAPI.Repositories {
         public List<Insured> search(string query);
         public Insured? findById(long id);
         public void create(Insured insured);
+        public void createMultiple(List<Insured> insures);
         public void update(Insured insured);
         public void delete(long id);
         public bool commit();
@@ -78,6 +79,12 @@ namespace InsuranceAPI.Repositories {
             if(inCuestion != null){
                 inCuestion.Phones.Clear();
                 _context.Insureds.Remove(inCuestion);
+            }
+        }
+
+        public void createMultiple(List<Insured> insureds) {
+            foreach(Insured insured in insureds) {
+                create(insured);
             }
         }
     }
