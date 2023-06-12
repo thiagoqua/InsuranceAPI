@@ -3,13 +3,13 @@
 namespace InsuranceAPI.Models {
     public class LoginRequest {
         [JsonInclude]
-        public string username;
+        public string Username { get; set; } = null!;
         [JsonInclude]
-        public string password;
+        public string Password { get; set; } = null!;
 
         public LoginRequest(string username, string password) {
-            this.username = username;
-            this.password = password;
+            this.Username = username;
+            this.Password = password;
         }
     }
 }

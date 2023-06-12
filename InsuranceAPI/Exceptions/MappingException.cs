@@ -12,6 +12,6 @@
 
         public string ErrorCell { get; }
 
-        public int ErrorRow { get; set; }
+        public int ErrorRow { get; set; } 
     }
 }

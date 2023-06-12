@@ -35,6 +35,8 @@ public partial class Insured
 
     public string Status { get; set; } = null!;
 
+    public short PaymentExpiration { get; set; }
+
     public virtual Address AddressNavigation { get; set; } = null!;
 
     public virtual Company CompanyNavigation { get; set; } = null!;

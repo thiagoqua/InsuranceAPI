@@ -14,8 +14,8 @@ namespace InsuranceAPI.Repositories {
         }
         public Admin? authenticate(LoginRequest request) {
             return (from admin in _context.Admins.Include(ad => ad.ProducerNavigation)
-                    where admin.Username == request.username &&
-                            admin.Password == request.password
+                    where admin.Username == request.Username &&
+                            admin.Password == request.Password
                     select admin).FirstOrDefault();
         }
     }

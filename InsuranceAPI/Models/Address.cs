@@ -14,7 +14,7 @@ public partial class Address
 
     public int? Floor { get; set; }
 
-    public int? Departament { get; set; }
+    public string? Departament { get; set; }
 
     public string City { get; set; } = null!;
 

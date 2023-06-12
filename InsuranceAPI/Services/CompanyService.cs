@@ -4,6 +4,7 @@ using InsuranceAPI.Repositories;
 namespace InsuranceAPI.Services {
     public interface ICompanyService {
         public List<Company> getAll();
+        public Company? getById(long id);
     }
 
     public class CompanyService : ICompanyService{
@@ -15,6 +16,10 @@ namespace InsuranceAPI.Services {
 
         public List<Company> getAll() {
             return _repo.getAll();
+        }
+
+        public Company? getById(long id) {
+            return _repo.getById(id);
         }
     }
 }

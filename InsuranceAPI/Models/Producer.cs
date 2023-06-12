@@ -16,7 +16,7 @@ public partial class Producer
 
     [JsonIgnore]
     public virtual ICollection<Admin> Admins { get; set; } = new List<Admin>();
-
+    
     [JsonIgnore]
     public virtual ICollection<Insured> Insureds { get; set; } = new List<Insured>();
 }

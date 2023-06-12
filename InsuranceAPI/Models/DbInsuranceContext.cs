@@ -42,7 +42,10 @@ public partial class DbInsuranceContext : DbContext
                 .HasMaxLength(20)
                 .IsUnicode(false)
                 .HasColumnName("country");
-            entity.Property(e => e.Departament).HasColumnName("departament");
+            entity.Property(e => e.Departament)
+                .HasMaxLength(5)
+                .IsUnicode(false)
+                .HasColumnName("departament");
             entity.Property(e => e.Floor).HasColumnName("_floor");
             entity.Property(e => e.Number)
                 .HasMaxLength(8)
@@ -144,6 +147,7 @@ public partial class DbInsuranceContext : DbContext
                 .HasMaxLength(11)
                 .IsUnicode(false)
                 .HasColumnName("life");
+            entity.Property(e => e.PaymentExpiration).HasColumnName("paymentExpiration");
             entity.Property(e => e.Producer).HasColumnName("producer");
             entity.Property(e => e.Status)
                 .HasMaxLength(10)
