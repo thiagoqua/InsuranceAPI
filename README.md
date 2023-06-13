@@ -8,6 +8,6 @@
 [^2]: indicates the floor
 [^3]: indicates the departament
 [^4]: the string between braces is the description of the number phone
-[^5]: the fill background color of this cell determines in which company the person is insured. It always need to be a color. In the case that the cell has blank color, verify that the background color is setted to ==white== and it is not setted to ==no fill==
+[^5]: the fill background color of this cell determines in which company the person is insured. It always need to be a color. In the case that the cell has blank color, verify that the background color is setted to <mark>white</mark> and it is not setted to <mark>no fill</mark>
 The *italized text* means that that property is optional
 The parts where **!** appears means that the parser expect literally that/those character/s.

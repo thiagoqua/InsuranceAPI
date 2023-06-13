@@ -61,6 +61,11 @@ builder.Services.Configure<FormOptions>(opt =>{
     opt.MemoryBufferThreshold = int.MaxValue;
 });
 
+// Configuring writing bytes to the response body
+builder.Services.Configure<IISServerOptions>(options => {
+    options.AllowSynchronousIO = true;
+});
+
 builder.Services.AddControllers(opt =>
     opt.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true
 );

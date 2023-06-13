@@ -3,12 +3,15 @@ using InsuranceAPI.Exceptions;
 using InsuranceAPI.Repositories;
 using System.Text.Json;
 using InsuranceAPI.Helpers;
+using NPOI.SS.UserModel;
 
 namespace InsuranceAPI.Services {
     public interface IFileService {
         public ExcelDataResultDTO parseFile(IFormFile file);
         public void storeParsed();
         public void cancelParsed();
+        public IWorkbook exportToExcel();
+        public void exportToPDF();
     }
 
     public class FileService : IFileService {
@@ -102,6 +105,18 @@ namespace InsuranceAPI.Services {
             removeUltimatum();
         }
 
+        public IWorkbook exportToExcel() {
+            ExcelHandler handler = new ExcelHandler();
+
+
+            return handler.export(_insuredService.getAll());
+
+        }
+
+        public void exportToPDF() {
+            
+        }
+
         private void removeUltimatum() {
             string path = Path.Combine(filesDir, "ultimatum.json");
 
@@ -122,7 +137,5 @@ namespace InsuranceAPI.Services {
                 .ContinueWith(t => removeUltimatum(), 
                     TaskContinuationOptions.OnlyOnRanToCompletion);
         }
-
-        
     }
 }

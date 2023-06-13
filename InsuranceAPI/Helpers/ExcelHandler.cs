@@ -9,18 +9,23 @@ using InsuranceAPI.Repositories;
 using NPOI.XWPF.UserModel;
 using Org.BouncyCastle.Crypto.Parameters;
 using InsuranceAPI.Services;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using NPOI.SS.Formula.Functions;
+using NPOI.HPSF;
 
 namespace InsuranceAPI.Helpers {
     public class ExcelHandler {
         private readonly IFormFile? file;
         private readonly List<Company>? companies;
         private readonly List<Producer>? producers;
-        private readonly string filesDir = Path.Combine(
-            System.Environment.CurrentDirectory,
-            "Files");
+        private readonly string filesDir;
 
+        public ExcelHandler() {
+            filesDir = Path.Combine(Environment.CurrentDirectory,"Files");
+        }
+        
         public ExcelHandler(IFormFile formFile,List<Producer> prods,
-                                List<Company> comps) {
+                                List<Company> comps) : this() {
             file = formFile;
             producers = prods;
             companies = comps;
@@ -65,6 +70,22 @@ namespace InsuranceAPI.Helpers {
             stream.Close();
 
             return new ExcelDataResultDTO(interpreted, nonInterpretedRows);
+        }
+
+        public IWorkbook export(List<Insured> insureds) {
+            IWorkbook workbook = new XSSFWorkbook();
+            ISheet sheet = workbook.CreateSheet("asegurados");
+            IRow row;
+
+            setColumnsNames(sheet.CreateRow(0),
+                            workbook.CreateCellStyle(),
+                            workbook.CreateFont());
+
+            for(int i = 1;i < insureds.Count; ++i)
+                setColumnData(sheet.CreateRow(i), 
+                              insureds[i-1],
+                              workbook.CreateCellStyle());
+            return workbook;
         }
 
         private Insured mapFromExcelRow(IRow row, int rowNumber) {
@@ -196,7 +217,7 @@ namespace InsuranceAPI.Helpers {
         /// <exception cref="MappingException">
         ///     If cell 5 doesn't have the format: _street _number P _floor DTO _dpt.
         /// </exception>
-        private Address mapAddressFromExcelRow(IRow row) {
+        private Models.Address mapAddressFromExcelRow(IRow row) {
             string[]? cell = row.GetCell(5).ToString()?.Split(" ");
             string? street, number, city, province, country, departament;
             int numberStartIndex, floor;
@@ -255,7 +276,7 @@ namespace InsuranceAPI.Helpers {
                     break;
             }
 
-            return new Address()
+            return new Models.Address()
             {
                 Street = street,
                 Number = number,
@@ -339,6 +360,191 @@ namespace InsuranceAPI.Helpers {
                 throw new MappingException("payment_expiration");
 
             return short.Parse(cell);
+        }
+
+        private void setColumnsNames(IRow row,ICellStyle styles,IFont font) {
+            NPOI.SS.UserModel.ICell cell;
+
+            font.IsBold = true;
+            font.Underline = FontUnderlineType.Double;
+            font.FontHeightInPoints = 14;
+            font.Color = NPOI.HSSF.Util.HSSFColor.DarkBlue.Index;
+
+            styles.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.LightGreen.Index;
+            styles.FillPattern = FillPattern.SolidForeground;
+            styles.BorderBottom = BorderStyle.Medium;
+            styles.SetFont(font);
+
+            cell = row.CreateCell(0);
+            cell.SetCellValue("MATRICULA");
+
+            cell = row.CreateCell(1);
+            cell.SetCellValue("CARPETA");
+
+            cell = row.CreateCell(2);
+            cell.SetCellValue("VIGENCIA");
+
+            cell = row.CreateCell(3);
+            cell.SetCellValue("CLIENTE");
+
+            cell = row.CreateCell(4);
+            cell.SetCellValue("FECHA NAC.");
+
+            cell = row.CreateCell(5);
+            cell.SetCellValue("DIRECCION");
+
+            cell = row.CreateCell(6);
+            cell.SetCellValue("ESTADO");
+
+            cell = row.CreateCell(7);
+            cell.SetCellValue("VTO. CUOTA");
+
+            cell = row.CreateCell(8);
+            cell.SetCellValue("LOCALIDAD");
+
+            cell = row.CreateCell(9);
+            cell.SetCellValue("DOCUMENTO");
+
+            cell = row.CreateCell(10);
+            cell.SetCellValue("TELEFONO");
+
+            cell = row.CreateCell(11);
+            cell.SetCellValue("DESCRIPCION");
+
+            cell = row.CreateCell(12);
+            cell.SetCellValue("CUIT");
+
+            cell = row.CreateCell(13);
+            cell.SetCellValue("PRODUCTOR");
+
+            foreach(NPOI.SS.UserModel.ICell column in row.Cells)
+                column.CellStyle = styles;
+        }
+
+        private void setColumnData(IRow row,Insured insured,ICellStyle companyStyle) {
+            NPOI.SS.UserModel.ICell cell;
+            string born, address, phones, folder, namesAndPolicy;
+
+            born = insured.Born.ToString("dd/MM/yyyy hh:mm:ss").Split(" ")[0];
+            address = insured.AddressNavigation.Street + " " +
+                      insured.AddressNavigation.Number;
+            phones = "";
+            folder = insured.Folder != 0 ? insured.Folder.ToString() : string.Empty;
+            namesAndPolicy = insured.Firstname + " " + insured.Lastname;
+
+            //completing address
+            if(insured.AddressNavigation.Floor != null)
+                address += " P " + insured.AddressNavigation.Floor.ToString();
+            if(insured.AddressNavigation.Departament != null)
+                address += " DTO " + insured.AddressNavigation.Departament;
+            
+            //completing phones
+            foreach(Phone phone in insured.Phones) {
+                phones += phone.Number;
+                if(phone.Description != null)
+                    phones += " (" + phone.Description + ") ";
+                else 
+                    phones += " ";
+            }
+
+            //completing policy
+            if(insured.InsurancePolicy != null)
+                namesAndPolicy += " (" + insured.InsurancePolicy + ") ";
+
+            //completing company 
+            if(insured.Company == 1) {
+                //company is cooperación, so the background
+                //will be align to the producer
+                switch(insured.Producer) {
+                    case 1:
+                        companyStyle.FillForegroundColor =
+                    NPOI.HSSF.Util.HSSFColor.Pink.Index;
+                        break;
+                    case 2:
+                        companyStyle.FillForegroundColor =
+                    NPOI.HSSF.Util.HSSFColor.Yellow.Index;
+                        break;
+                    case 3:
+                        companyStyle.FillForegroundColor =
+                    NPOI.HSSF.Util.HSSFColor.Green.Index;
+                        break;
+                    case 4:
+                        companyStyle.FillForegroundColor =
+                    NPOI.HSSF.Util.HSSFColor.Orange.Index;
+                        break;
+                    case 5:
+                        companyStyle.FillForegroundColor =
+                    NPOI.HSSF.Util.HSSFColor.PaleBlue.Index;
+                        break;
+                }
+            } else {
+                //company is federación, so the background
+                //will be white
+                companyStyle.FillForegroundColor =
+                    NPOI.HSSF.Util.HSSFColor.White.Index;
+            }
+
+            companyStyle.FillPattern = FillPattern.SolidForeground;
+            companyStyle.BorderBottom = BorderStyle.Thin;
+            companyStyle.BorderLeft = BorderStyle.Thin;
+            companyStyle.BorderRight = BorderStyle.Thin;
+
+            //setting values
+            cell = row.CreateCell(0);
+            cell.SetCellValue(insured.License);
+            cell.CellStyle = companyStyle;
+
+            cell = row.CreateCell(1);
+            cell.SetCellValue(folder);
+            cell.CellStyle = companyStyle;
+
+            cell = row.CreateCell(2);
+            cell.SetCellValue(insured.Life);
+            cell.CellStyle = companyStyle;
+
+            cell = row.CreateCell(3);
+            cell.SetCellValue(namesAndPolicy);
+            cell.CellStyle = companyStyle;
+
+            cell = row.CreateCell(4);
+            cell.SetCellValue(born);
+            cell.CellStyle = companyStyle;
+
+            cell = row.CreateCell(5);
+            cell.SetCellValue(address);
+            cell.CellStyle = companyStyle;
+
+            cell = row.CreateCell(6);
+            cell.SetCellValue(insured.Status);
+            cell.CellStyle = companyStyle;
+
+            cell = row.CreateCell(7);
+            cell.SetCellValue(insured.PaymentExpiration);
+            cell.CellStyle = companyStyle;
+
+            cell = row.CreateCell(8);
+            cell.SetCellValue(insured.AddressNavigation.City);
+            cell.CellStyle = companyStyle;
+
+            cell = row.CreateCell(9);
+            cell.SetCellValue(insured.Dni);
+            cell.CellStyle = companyStyle;
+
+            cell = row.CreateCell(10);
+            cell.SetCellValue(phones);
+            cell.CellStyle = companyStyle;
+
+            cell = row.CreateCell(11);
+            cell.SetCellValue(insured.Description);
+            cell.CellStyle = companyStyle;
+
+            cell = row.CreateCell(12);
+            cell.SetCellValue(insured.Cuit);
+            cell.CellStyle = companyStyle;
+
+            cell = row.CreateCell(13);
+            cell.SetCellValue(insured.ProducerNavigation.Firstname);
+            cell.CellStyle = companyStyle;
         }
     }
 }
