@@ -12,6 +12,7 @@ using InsuranceAPI.Services;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using NPOI.SS.Formula.Functions;
 using NPOI.HPSF;
+using Microsoft.IdentityModel.Tokens;
 
 namespace InsuranceAPI.Helpers {
     public class ExcelHandler {
@@ -31,7 +32,7 @@ namespace InsuranceAPI.Helpers {
             companies = comps;
         }
 
-        public ExcelDataResultDTO parse() {
+        public async Task<ExcelDataResultDTO> parse() {
             List<Insured> interpreted = new List<Insured>();
             List<string> nonInterpretedRows = new List<string>();
             Stream stream = file!.OpenReadStream();
@@ -48,54 +49,63 @@ namespace InsuranceAPI.Helpers {
 
             sheet = workBook.GetSheetAt(0);
             rows = sheet.LastRowNum;
-            //modify the i starting value for the corresponding first row of data
-            for(int i = 1; i < rows; i++){
-                row = sheet.GetRow(i);
-                try{
-                    interpreted.Add(mapFromExcelRow(row, i));
+
+            await Task.Run(() => {
+                //modify the i starting value for the corresponding first row of data
+                for(int i = 1; i < rows; i++) {
+                    row = sheet.GetRow(i);
+                    try {
+                        interpreted.Add(mapFromExcelRow(row, i));
+                    } catch(MappingException mex) {
+                        nonInterpretedRows.Add(
+                            "MAPPING ERROR ON ROW " + (mex.ErrorRow + 1).ToString() +
+                            " IN CELL " + mex.ErrorCell.ToString()
+                        );
+                    } catch(Exception ex) {
+                        nonInterpretedRows.Add(
+                            "ERROR ON ROW " + i +
+                            " OF TYPE " + ex.Message
+                        );
+                    }
                 }
-                catch(MappingException mex){
-                    nonInterpretedRows.Add(
-                        "MAPPING ERROR ON ROW " + (mex.ErrorRow + 1).ToString() +
-                        " IN CELL " + mex.ErrorCell.ToString()
-                    );
-                }
-                catch(Exception ex){
-                    nonInterpretedRows.Add(
-                        "ERROR ON ROW " + i +
-                        " OF TYPE " + ex.Message
-                    );
-                }
-            }
+            });
+
             stream.Close();
 
             return new ExcelDataResultDTO(interpreted, nonInterpretedRows);
         }
 
-        public IWorkbook export(List<Insured> insureds) {
+        public async Task<byte[]?> export(List<Insured> insureds) {
             IWorkbook workbook = new XSSFWorkbook();
             ISheet sheet = workbook.CreateSheet("asegurados");
             IRow row;
+            byte[]? fileBytes = null;
 
-            setColumnsNames(sheet.CreateRow(0),
-                            workbook.CreateCellStyle(),
-                            workbook.CreateFont());
+            await Task.Run(() => {
+                setColumnsNames(sheet.CreateRow(0),
+                                workbook.CreateCellStyle(),
+                                workbook.CreateFont());
 
-            for(int i = 1;i < insureds.Count; ++i)
-                setColumnData(sheet.CreateRow(i), 
-                              insureds[i-1],
-                              workbook.CreateCellStyle());
-            return workbook;
+                for(int i = 1;i < insureds.Count; ++i)
+                    setColumnData(sheet.CreateRow(i), 
+                                  insureds[i-1],
+                                  workbook.CreateCellStyle());
+            });
+
+            using(MemoryStream stream = new()) {
+                workbook.Write(stream, true);
+                fileBytes = stream.ToArray();
+            }
+
+            return fileBytes;
         }
 
         private Insured mapFromExcelRow(IRow row, int rowNumber) {
-            try
-            {
+            try{
                 string[]? namesPolicy = mapNameOrPolicyFromExcelRow(row.GetCell(3).ToString());
                 Company company = mapCompanyFromExcelRow(row.GetCell(0).CellStyle.FillForegroundColorColor);
                 Producer producer = mapProducerFromExcelRow(row.GetCell(13).ToString());
-                Insured ret = new Insured()
-                {
+                Insured ret = new Insured(){
                     License = mapStringFromExcelRow(row.GetCell(0).ToString()),
                     Folder = mapFolderFromExcelRow(row.GetCell(1).ToString()),
                     Life = mapStringFromExcelRow(row.GetCell(2).ToString()),
@@ -157,8 +167,8 @@ namespace InsuranceAPI.Helpers {
 
             if(cell.StartsWith("DNI "))
                 return cell.Split(" ")[1];
-            else if(cell.StartsWith("LE"))
-                return cell;
+            else if(cell.StartsWith("LE "))
+                return cell.Split(" ")[1];
 
             throw new MappingException("DNI");
         }
@@ -232,10 +242,9 @@ namespace InsuranceAPI.Helpers {
                 throw new MappingException("dirección");
 
             //getting the number
-            for(int i = 0; i < cell.Length; ++i)
-            {
-                if(char.IsDigit(cell[i], 0) || cell[i].Equals("S/N"))
-                {
+            for(int i = 0; i < cell.Length; ++i){
+                if(!string.IsNullOrEmpty(cell[i]) && (char.IsDigit(cell[i], 0) || 
+                                                        cell[i].Equals("S/N"))){
                     numberStartIndex = i;
                     break;
                 }
@@ -245,18 +254,15 @@ namespace InsuranceAPI.Helpers {
                 throw new MappingException("número_dirección");
 
             //getting the floor and departament if exists
-            try
-            {
-                for(int i = numberStartIndex + 1; i < cell.Length; ++i)
-                {
+            try{
+                for(int i = numberStartIndex + 1; i < cell.Length; ++i){
                     if(cell[i].Equals("P"))
                         floor = int.Parse(cell[i + 1]);
                     else if(cell[i].Equals("DTO"))
                         departament = cell[i + 1];
                 }
             }
-            catch(Exception)
-            {
+            catch(Exception){
                 throw new MappingException("piso_departamento");
             }
 
@@ -296,11 +302,9 @@ namespace InsuranceAPI.Helpers {
             string[] phones = cell.Split('/');
             Phone toAdd;
 
-            foreach(string phone in phones)
-            {
+            foreach(string phone in phones){
                 //contains a description
-                if(phone.Contains("("))
-                {
+                if(phone.Contains("(")){
                     string[] numberAndDescription = phone.Split("(");
                     toAdd = new Phone()
                     {
@@ -311,8 +315,7 @@ namespace InsuranceAPI.Helpers {
                     };
                 }
                 else
-                    toAdd = new Phone()
-                    {
+                    toAdd = new Phone(){
                         Number = phone
                     };
                 ret.Add(toAdd);
@@ -429,7 +432,7 @@ namespace InsuranceAPI.Helpers {
             address = insured.AddressNavigation.Street + " " +
                       insured.AddressNavigation.Number;
             phones = "";
-            folder = insured.Folder != 0 ? insured.Folder.ToString() : string.Empty;
+            folder = insured.Folder != 0 ? insured.Folder.ToString() : "SIN CARPETA";
             namesAndPolicy = insured.Firstname + " " + insured.Lastname;
 
             //completing address
@@ -439,12 +442,15 @@ namespace InsuranceAPI.Helpers {
                 address += " DTO " + insured.AddressNavigation.Departament;
             
             //completing phones
-            foreach(Phone phone in insured.Phones) {
+            for(int i = 0;i < insured.Phones.Count;++i) {
+                Phone phone = insured.Phones.ElementAt(i);
                 phones += phone.Number;
+                
                 if(phone.Description != null)
-                    phones += " (" + phone.Description + ") ";
-                else 
-                    phones += " ";
+                    phones += " (" + phone.Description + ")";
+                
+                if((i + 1) < insured.Phones.Count)
+                    phones += "/";
             }
 
             //completing policy
@@ -527,7 +533,7 @@ namespace InsuranceAPI.Helpers {
             cell.CellStyle = companyStyle;
 
             cell = row.CreateCell(9);
-            cell.SetCellValue(insured.Dni);
+            cell.SetCellValue("DNI " + insured.Dni);
             cell.CellStyle = companyStyle;
 
             cell = row.CreateCell(10);

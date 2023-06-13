@@ -26,16 +26,16 @@ namespace InsuranceAPI.Controllers {
 
         [HttpPost,DisableRequestSizeLimit]
         [Route("upload")]
-        public IActionResult upload(IFormFile file) {
-            ExcelDataResultDTO ret = _service.parseFile(file);
+        public async Task<IActionResult> upload(IFormFile file) {
+            ExcelDataResultDTO ret = await _service.parseFile(file);
             return Ok(ret);
         }
 
         [HttpGet]
         [Route("store")]
-        public IActionResult store() {
+        public async Task<IActionResult> store() {
             try {
-                _service.storeParsed();
+                await _service.storeParsed();
                 return Ok();
             } catch (Exception ex) {
                 return StatusCode(
@@ -58,25 +58,36 @@ namespace InsuranceAPI.Controllers {
 
         [HttpGet]
         [Route("export")]
-        public IActionResult export([FromQuery] bool? PDF, [FromQuery] bool? XLSX) {
-            if(XLSX != null && PDF == null) {
-                IWorkbook res = _service.exportToExcel();
+        public async Task<IActionResult> export([FromQuery] bool? PDF, [FromQuery] bool? XLSX) {
+            exportingFormats format;
 
-                using(var stream = new MemoryStream()) {
-                    res.Write(stream,false);
-                    return File(
-                        stream.ToArray(),
-                        "application/vnd.ms-excel",
-                        "cartera_asegurado.xlsx"
-                    );
-                }
-            }
-            else if(PDF != null && XLSX == null) {
-                return StatusCode(501);
-            }
+            if(XLSX != null && PDF == null)
+                format = exportingFormats.XLSX;
+            else if(PDF != null && XLSX == null)
+                format = exportingFormats.PDF;
             else
-                Response.StatusCode = StatusCodes.Status400BadRequest;
-            return BadRequest();
+                return BadRequest();
+
+            try {
+                byte[] result = await _service.exportAsync(format);
+                string contentType, fileName;
+
+                if(format == exportingFormats.XLSX) {
+                    contentType = "application/vnd.ms-excel";
+                    fileName = "cartera_asegurado.xlsx";
+                } else {
+                    contentType = "application/pdf";
+                    fileName = "cartera_asegurado.pdf";
+                }
+
+                return File(
+                    result,
+                    contentType,
+                    fileName
+                );
+            } catch(NullReferenceException nre) {
+                return StatusCode(500, nre.Message);
+            }
         }
     }
 }
