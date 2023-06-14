@@ -15,6 +15,8 @@ namespace InsuranceAPI.Services {
         public Task storeParsed();
         public void cancelParsed();
         public Task<byte[]> exportAsync(exportingFormats format);
+        public List<string> getBackups();
+        public Task applyBackup(string backup);
     }
 
     public class FileService : IFileService {
@@ -52,8 +54,7 @@ namespace InsuranceAPI.Services {
                 using(FileStream fstream = new FileStream(fullDir,
                                                     FileMode.CreateNew)) {
                     List<Insured> toStore = new List<Insured>();
-                    //removing the company object,
-                    //using a deep clone of that
+                    //removing the foreign objects
                     foreach(Insured insured in parsingResult.Interpreted) {
                         string serialized = JsonSerializer.Serialize(insured);
                         Insured toAdd = JsonSerializer
@@ -93,10 +94,12 @@ namespace InsuranceAPI.Services {
                 if(toSave == null)
                     throw new MappingException("JSON_deserializing");
 
-                //create the backup
-                using(FileStream fstream = new FileStream(fileBackupDir, FileMode.CreateNew)) {
-                    JsonSerializer.Serialize(fstream, previous, JSONopt);
-                }
+                //create the backup async becouse it isn't neccesary to await it
+                Task backupCreation = Task.Run(() => {
+                    using(FileStream fstream = new FileStream(fileBackupDir, FileMode.CreateNew)) {
+                        JsonSerializer.Serialize(fstream, previous, JSONopt);
+                    }
+                });
 
                 _insuredService.deleteMultiple(previous.Select(ins => ins.Id)
                                                         .ToList());
@@ -147,6 +150,72 @@ namespace InsuranceAPI.Services {
             var timer = Task.Delay(TimeSpan.FromMinutes(1), _cancelationToken.Token)
                 .ContinueWith(t => removeUltimatum(), 
                     TaskContinuationOptions.OnlyOnRanToCompletion);
+        }
+
+        /** 
+         * The idea is to quit the above methods from here and put it in another
+         * server
+        **/
+        public List<string> getBackups() {
+            //format is yyyyMMdd_hhmmss
+            List<string> backups = new List<string>();
+            string backupDir = Path.Combine(filesDir, "Backups");
+            foreach(string backup in Directory.GetFiles(backupDir)) {
+                string fileName = backup.Split("Backups")[1];
+                string[] date = {
+                    fileName.Substring(7, 2),     //day
+                    fileName.Substring(5, 2),     //month
+                    fileName.Substring(1, 4)      //year
+                };
+                string[] time = {
+                    fileName.Substring(10, 2),    //hour
+                    fileName.Substring(12, 2),    //minute
+                    fileName.Substring(14, 2),    //second
+                };
+
+                backups.Add(
+                    string.Join("/", date) + " " + 
+                    string.Join(":",time)
+                );
+            }
+            return backups;
+        }
+
+        public async Task applyBackup(string backup) {
+            List<Insured>? toSave = new List<Insured>();
+            List<Insured> previous = _insuredService.getAll();
+            string backupsDir = Path.Combine(filesDir, "Backups");
+            string backupName =
+                DateTime.Parse(backup).ToString("yyyyMMdd_HHmmss") + ".json";
+            string backupPath = Path.Combine(backupsDir, backupName);
+            string content;
+
+            await Task.Run(() => {
+                content = File.ReadAllText(backupPath);
+
+                toSave = JsonSerializer.Deserialize<List<Insured>>(content, JSONopt);
+
+                if(toSave == null)
+                    throw new MappingException("JSON_deserializing");
+
+                //nulling all the foreign objects
+                foreach(Insured insured in toSave) {
+                    insured.Id = 0;
+                    insured.Address = 0;
+                    insured.AddressNavigation.Id = 0;
+                    insured.CompanyNavigation = null!;
+                    insured.ProducerNavigation = null!;
+                    foreach(Phone phone in insured.Phones) {
+                        phone.Id = 0;
+                        phone.Insured = 0;
+                        phone.InsuredNavigation = null!;
+                    }
+                }
+
+                _insuredService.deleteMultiple(previous.Select(ins => ins.Id)
+                                                        .ToList());
+                _insuredService.createMultiple(toSave);
+            });
         }
     }
 }

@@ -14,7 +14,7 @@ using NPOI.XSSF.UserModel;
 
 namespace InsuranceAPI.Controllers {
     [EnableCors("everything")]
-    //[Authorize]
+    [Authorize]
     [Route("api/file")]
     [ApiController]
     public class FileController : ControllerBase {
@@ -58,7 +58,8 @@ namespace InsuranceAPI.Controllers {
 
         [HttpGet]
         [Route("export")]
-        public async Task<IActionResult> export([FromQuery] bool? PDF, [FromQuery] bool? XLSX) {
+        public async Task<IActionResult> export([FromQuery] bool? PDF, 
+                                                [FromQuery] bool? XLSX) {
             exportingFormats format;
 
             if(XLSX != null && PDF == null)
@@ -87,6 +88,29 @@ namespace InsuranceAPI.Controllers {
                 );
             } catch(NullReferenceException nre) {
                 return StatusCode(500, nre.Message);
+            }
+        }
+
+        [HttpGet]
+        [Route("backup/all")]
+        public IActionResult getAllBackups() {
+            List<string> ret;
+            try {
+                ret = _service.getBackups();
+                return Ok(ret);
+            } catch(Exception ex) {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpGet]
+        [Route("backup/proceed")]
+        public async Task<IActionResult> applyBackup([FromQuery] string backup) {
+            try {
+                await _service.applyBackup(backup.Replace("+"," "));
+                return Ok();
+            } catch(Exception ex) {
+                return StatusCode(500, ex.Message);
             }
         }
     }

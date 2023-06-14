@@ -5,10 +5,13 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Security.Cryptography;
+using Org.BouncyCastle.Crypto.Generators;
+using BCrypt.Net;
+using InsuranceAPI.Exceptions;
 
 namespace InsuranceAPI.Services {
     public interface IAdminService {
-        public Admin? authenticate(LoginRequest req);
+        public Task<Admin> authenticate(LoginRequest req);
     }
 
     public class AdminService : IAdminService{
@@ -21,12 +24,20 @@ namespace InsuranceAPI.Services {
             _config = config;
         }
 
-        public Admin? authenticate(LoginRequest req) {
-            Admin? loggin = _repo.authenticate(req);
-            if(loggin != null){
+        public async Task<Admin> authenticate(LoginRequest req) {
+            Admin? loggin = _repo.getByUsername(req.Username);
+
+            if (loggin == null)
+                throw new BadUserException();
+
+            await Task.Run(() => {
+                if(!BCrypt.Net.BCrypt.Verify(req.Password,loggin.Password))
+                    throw new BadUserException();
+
                 loggin.Token = generateToken(loggin);
-            }
-            return loggin;
+            });
+            
+            return loggin!;
         }
 
         private string generateToken(Admin admin) {
