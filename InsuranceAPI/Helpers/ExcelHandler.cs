@@ -78,7 +78,6 @@ namespace InsuranceAPI.Helpers {
         public async Task<byte[]?> export(List<Insured> insureds) {
             IWorkbook workbook = new XSSFWorkbook();
             ISheet sheet = workbook.CreateSheet("asegurados");
-            IRow row;
             byte[]? fileBytes = null;
 
             await Task.Run(() => {

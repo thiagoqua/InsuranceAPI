@@ -15,8 +15,8 @@ namespace InsuranceAPI.Services {
         public Task storeParsed();
         public void cancelParsed();
         public Task<byte[]> exportAsync(exportingFormats format);
-        public List<string> getBackups();
-        public Task applyBackup(string backup);
+        public List<string> getBackupsDates();
+        public Task<List<Insured>> getBackupData(string backup);
     }
 
     public class FileService : IFileService {
@@ -49,6 +49,8 @@ namespace InsuranceAPI.Services {
             // creating the ultimatum file. it isn't neccesary to await it becouse
             // it doesn't compute a value required in the response
             Task ultimatumCreation = Task.Run(() => {
+                //if the user make the same petition two times fastly, the ultimatum 
+                //isn't removed yet
                 if(File.Exists(fullDir))
                     cancelParsed();
                 using(FileStream fstream = new FileStream(fullDir,
@@ -64,6 +66,7 @@ namespace InsuranceAPI.Services {
                         toStore.Add(toAdd);
                     }
                     JsonSerializer.Serialize(fstream, toStore, JSONopt);
+                    fstream.Close();
                 }
             });
 
@@ -94,7 +97,8 @@ namespace InsuranceAPI.Services {
                 if(toSave == null)
                     throw new MappingException("JSON_deserializing");
 
-                //create the backup async becouse it isn't neccesary to await it
+                //create the backup async without awaiting
+                //becouse it isn't neccesary to await it
                 Task backupCreation = Task.Run(() => {
                     using(FileStream fstream = new FileStream(fileBackupDir, FileMode.CreateNew)) {
                         JsonSerializer.Serialize(fstream, previous, JSONopt);
@@ -156,7 +160,7 @@ namespace InsuranceAPI.Services {
          * The idea is to quit the above methods from here and put it in another
          * server
         **/
-        public List<string> getBackups() {
+        public List<string> getBackupsDates() {
             //format is yyyyMMdd_hhmmss
             List<string> backups = new List<string>();
             string backupDir = Path.Combine(filesDir, "Backups");
@@ -181,41 +185,63 @@ namespace InsuranceAPI.Services {
             return backups;
         }
 
-        public async Task applyBackup(string backup) {
-            List<Insured>? toSave = new List<Insured>();
+        public async Task<List<Insured>> getBackupData(string backup) {
+            List<Insured>? ret = new List<Insured>();
             List<Insured> previous = _insuredService.getAll();
             string backupsDir = Path.Combine(filesDir, "Backups");
             string backupName =
                 DateTime.Parse(backup).ToString("yyyyMMdd_HHmmss") + ".json";
             string backupPath = Path.Combine(backupsDir, backupName);
-            string content;
+            string content,fullDir;
 
             await Task.Run(() => {
                 content = File.ReadAllText(backupPath);
 
-                toSave = JsonSerializer.Deserialize<List<Insured>>(content, JSONopt);
+                ret = JsonSerializer.Deserialize<List<Insured>>(content, JSONopt);
 
-                if(toSave == null)
+                if(ret == null)
                     throw new MappingException("JSON_deserializing");
-
-                //nulling all the foreign objects
-                foreach(Insured insured in toSave) {
-                    insured.Id = 0;
-                    insured.Address = 0;
-                    insured.AddressNavigation.Id = 0;
-                    insured.CompanyNavigation = null!;
-                    insured.ProducerNavigation = null!;
-                    foreach(Phone phone in insured.Phones) {
-                        phone.Id = 0;
-                        phone.Insured = 0;
-                        phone.InsuredNavigation = null!;
-                    }
-                }
-
-                _insuredService.deleteMultiple(previous.Select(ins => ins.Id)
-                                                        .ToList());
-                _insuredService.createMultiple(toSave);
             });
+
+            // creating the ultimatum file. it isn't neccesary to await it becouse
+            // it doesn't compute a value required in the response
+            Task ultimatumCreation = Task.Run(() => {
+                fullDir = Path.Combine(filesDir, "ultimatum.json");
+
+                //if the user make the same petition two times fastly, the ultimatum 
+                //isn't removed yet
+                if(File.Exists(fullDir))
+                    cancelParsed();
+
+                using(FileStream fstream = new FileStream(fullDir,
+                                                    FileMode.CreateNew)) {
+                    List<Insured> toUltimatum = new List<Insured>();
+                    //nulling the foreign objects
+                    foreach(Insured insured in ret) {
+                        string serialized = JsonSerializer.Serialize(insured);
+                        Insured toAdd = JsonSerializer
+                            .Deserialize<Insured>(serialized)!;
+
+                        toAdd.Id = 0;
+                        toAdd.Address = 0;
+                        toAdd.AddressNavigation.Id = 0;
+                        toAdd.CompanyNavigation = null!;
+                        toAdd.ProducerNavigation = null!;
+                        foreach(Phone phone in toAdd.Phones) {
+                            phone.Id = 0;
+                            phone.Insured = 0;
+                            phone.InsuredNavigation = null!;
+                        }
+
+                        toUltimatum.Add(toAdd);
+                    }
+                    JsonSerializer.Serialize(fstream, toUltimatum, JSONopt);
+                    fstream.Close();
+                }
+            });
+
+            startTimer();
+            return ret;
         }
     }
 }

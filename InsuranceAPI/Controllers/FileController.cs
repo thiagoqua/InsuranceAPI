@@ -31,6 +31,11 @@ namespace InsuranceAPI.Controllers {
             return Ok(ret);
         }
 
+        /// <summary>
+        ///     Stores the ultimatum file in the database, that has been created by the 
+        ///     import from an excel file or by the restore from a backup
+        /// </summary>
+        /// <returns>200, 500</returns>
         [HttpGet]
         [Route("store")]
         public async Task<IActionResult> store() {
@@ -96,7 +101,7 @@ namespace InsuranceAPI.Controllers {
         public IActionResult getAllBackups() {
             List<string> ret;
             try {
-                ret = _service.getBackups();
+                ret = _service.getBackupsDates();
                 return Ok(ret);
             } catch(Exception ex) {
                 return StatusCode(500, ex.Message);
@@ -104,11 +109,11 @@ namespace InsuranceAPI.Controllers {
         }
 
         [HttpGet]
-        [Route("backup/proceed")]
-        public async Task<IActionResult> applyBackup([FromQuery] string backup) {
+        [Route("backup/data")]
+        public async Task<IActionResult> applyBackup([FromQuery] string name) {
             try {
-                await _service.applyBackup(backup.Replace("+"," "));
-                return Ok();
+                List<Insured> ret = await _service.getBackupData(name.Replace("+"," "));
+                return Ok(ret);
             } catch(Exception ex) {
                 return StatusCode(500, ex.Message);
             }
