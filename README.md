@@ -3,7 +3,7 @@
 ## Structure of the Excel file to parse
 | LICENSE[^5] | FOLDER | LIFE | CLIENT | BORN | ADDRESS | STATE | VTO | CITY | DNI | PHONES[^6] *description* | DESCRIPTION | CUIT | PRODUCER
 | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | 
-| string | number or !SIN CARPETA | dd/mm-dd/mm | lastnames firstname *!(string)[^1]* | dd/mm/yyyy | street number *!P[^2] number* *!DTO[^3] number* | ACTIVA or ANULADA or EN JUICIO | number | string | !DNI number or LE number | number or number !(string)[^4] | *string* | *string* | TIKI or RICARDO or ZURDO or LEO
+| string | number | dd/mm-dd/mm | lastnames firstname *!(string)[^1]* | dd/mm/yyyy | street number *!P[^2] number* *!DTO[^3] number* | ACTIVA or ANULADA or EN JUICIO | number | string | !DNI number or LE number | number or number !(string)[^4] | *string* | *string* | TIKI or RICARDO or ZURDO or LEO
 [^1]: the string between braces is the insured policy
 [^2]: indicates the floor
 [^3]: indicates the departament
@@ -12,3 +12,9 @@
 [^6]: if there are more than one phone for an insured, they have to be separated by '/'.
 The *italized text* means that that property is optional
 The parts where **!** appears means that the parser expect literally that/those character/s.
+
+## Running database with Docker
+1. go to the InsuranceDB directory
+2. build the container: `docker build -t database:test .`
+3. run the container: `docker run -p 1433:1433 --name db -d database:test`
+4. go to the InsuranceAPI directory and run the project: `dotnet run`

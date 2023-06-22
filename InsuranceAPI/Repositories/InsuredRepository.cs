@@ -14,6 +14,15 @@ namespace InsuranceAPI.Repositories {
         public bool commit();
     }
 
+    public class InsuredComparer : IComparer<Insured> {
+        public int Compare(Insured? x, Insured? y) {
+            if(x == null || y == null) 
+                return 1;
+
+            return x.Lastname.CompareTo(y.Lastname);
+        }
+    }
+
     public class InsuredRepository : IInsuredRepository{
         private DbInsuranceContext _context;
 
@@ -27,6 +36,7 @@ namespace InsuranceAPI.Repositories {
                 .Include(ins => ins.ProducerNavigation)
                 .Include(ins => ins.Phones)
                 .Include(ins => ins.CompanyNavigation)
+                .OrderBy(ins => ins.Lastname)
                 .ToList();
         }
 
@@ -34,8 +44,8 @@ namespace InsuranceAPI.Repositories {
             return (from ins in _context.Insureds
                     where  ((ins.Firstname + " " + ins.Lastname).Contains(query) ||
                             (ins.Lastname + " " + ins.Firstname).Contains(query) ||
-                            ins.Firstname.Contains(query) || 
-                            ins.Lastname.Contains(query))
+                             ins.Firstname.Contains(query) || 
+                             ins.Lastname.Contains(query))
                     select ins
                     )
                     .Include(ins => ins.AddressNavigation)

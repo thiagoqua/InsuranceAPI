@@ -14,9 +14,11 @@ public partial class Producer
 
     public DateTime Joined { get; set; }
 
+    public int Code { get; set; }
+
     [JsonIgnore]
     public virtual ICollection<Admin> Admins { get; set; } = new List<Admin>();
-    
+
     [JsonIgnore]
     public virtual ICollection<Insured> Insureds { get; set; } = new List<Insured>();
 }

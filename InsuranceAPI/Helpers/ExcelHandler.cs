@@ -126,8 +126,7 @@ namespace InsuranceAPI.Helpers {
                 };
                 return ret;
             }
-            catch(MappingException me)
-            {
+            catch(MappingException me){
                 me.ErrorRow = rowNumber;
                 throw me;
             }
@@ -142,9 +141,6 @@ namespace InsuranceAPI.Helpers {
         private int mapFolderFromExcelRow(string? cell) {
             if(cell == null)
                 throw new MappingException("folder");
-
-            if(cell.Trim().Equals("SIN CARPETA"))
-                return 0;
 
             try{
                 return int.Parse(cell);
@@ -281,8 +277,7 @@ namespace InsuranceAPI.Helpers {
                     break;
             }
 
-            return new Models.Address()
-            {
+            return new Models.Address(){
                 Street = street,
                 Number = number,
                 Floor = floor != -1 ? floor : null,

@@ -16,8 +16,12 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddDbContext<DbInsuranceContext>(opt =>
-    opt.UseSqlServer(builder.Configuration.GetConnectionString("database"))
+builder.Services.AddDbContext<DbInsuranceContext>(opt => {
+    //DB in DESKTOP
+    //opt.UseSqlServer(builder.Configuration.GetConnectionString("desktopDB"));
+    //DB in DOCKER
+    opt.UseSqlServer(builder.Configuration.GetConnectionString("dockerDB"));
+}
 );
 //adding DI instances
 builder.Services.AddScoped<IInsuredService, InsuredService>();

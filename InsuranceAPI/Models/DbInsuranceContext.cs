@@ -197,6 +197,9 @@ public partial class DbInsuranceContext : DbContext
             entity.ToTable("producer");
 
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Code)
+                .HasDefaultValueSql("((2221))")
+                .HasColumnName("code");
             entity.Property(e => e.Firstname)
                 .HasMaxLength(20)
                 .IsUnicode(false)
