@@ -8,11 +8,11 @@ namespace InsuranceAPI.Services {
         public List<Insured> getAll();
         public List<Insured> getFromSearch(string query);
         public Insured? getById(long id);
-        public bool create(Insured insured,bool commit);
-        public bool createMultiple(List<Insured> insureds);
-        public bool update(Insured insured);
-        public bool delete(long id,bool commit);
-        public bool deleteMultiple(List<long> insuredIds);
+        public void create(Insured insured,bool commit);
+        public void createMultiple(List<Insured> insureds);
+        public void update(Insured insured);
+        public void delete(long id,bool commit);
+        public void deleteMultiple(List<long> insuredIds);
     }
 
     public class InsuredService : IInsuredService{
@@ -40,7 +40,7 @@ namespace InsuranceAPI.Services {
             return _insuredRepo.findById(id);
         }
 
-        public bool create(Insured insured,bool commit) {
+        public void create(Insured insured,bool commit) {
             Address address = insured.AddressNavigation;
             List<Phone> phones = insured.Phones.ToList();
 
@@ -48,10 +48,11 @@ namespace InsuranceAPI.Services {
             _insuredRepo.create(insured);
             _phoneRepo.createMultiple(phones);
 
-            return commit ? _insuredRepo.commit() : false;
+            if(commit)
+                _insuredRepo.commit();
         }
 
-        public bool update(Insured insured) {
+        public void update(Insured insured) {
             List<Phone> newPhones = insured.Phones.ToList();
             _insuredRepo.update(insured);
             List<Phone> prevPhones = _phoneRepo.getByInsured(insured.Id);
@@ -60,33 +61,33 @@ namespace InsuranceAPI.Services {
                     _phoneRepo.delete(phone.Id);
             }
             _phoneRepo.commit();
-            return _insuredRepo.commit();
+            _insuredRepo.commit();
         }
 
-        public bool delete(long id, bool commit) {
+        public void delete(long id, bool commit) {
             Insured? inCuestion = getById(id);
-            bool ret = false;
             if(inCuestion != null){
                 _phoneRepo.deleteByInsured(id);
                 _insuredRepo.delete(id);
                 _addressRepo.delete(inCuestion.Address);
-                ret = commit ? _insuredRepo.commit() : false;
+                if(commit) {
+                    _insuredRepo.commit();
+                }
             }
-            return ret;
         }
 
-        public bool createMultiple(List<Insured> insureds) {
+        public void createMultiple(List<Insured> insureds) {
             foreach(Insured newOne in insureds) 
                 create(newOne, false);
 
-            return _insuredRepo.commit();
+            _insuredRepo.commit();
         }
 
-        public bool deleteMultiple(List<long> insuredIds) {
+        public void deleteMultiple(List<long> insuredIds) {
             foreach(long id in insuredIds)
                 delete(id, false);
 
-            return _insuredRepo.commit();
+            _insuredRepo.commit();
         }
     }
 }

@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace InsuranceAPI.Models;
 
-public partial class Address
-{
+public partial class Address{
     public long Id { get; set; }
 
+    [Required]
     public string Street { get; set; } = null!;
 
+    [Required]
     public string Number { get; set; } = null!;
 
     public int? Floor { get; set; }

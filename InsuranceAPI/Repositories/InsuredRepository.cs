@@ -11,7 +11,7 @@ namespace InsuranceAPI.Repositories {
         public void createMultiple(List<Insured> insures);
         public void update(Insured insured);
         public void delete(long id);
-        public bool commit();
+        public void commit();
     }
 
     public class InsuredComparer : IComparer<Insured> {
@@ -69,15 +69,8 @@ namespace InsuranceAPI.Repositories {
             _context.Insureds.Add(newOne);
         }
 
-        public bool commit() {
-            try {
-                _context.SaveChanges();
-                return true;
-            }
-            catch(DbException ex){
-                Console.WriteLine(ex.Message);
-                return false;
-            }
+        public void commit() {
+            _context.SaveChanges();
         }
 
         public void update(Insured insured) {

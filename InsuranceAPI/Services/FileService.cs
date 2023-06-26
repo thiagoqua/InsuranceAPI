@@ -90,7 +90,7 @@ namespace InsuranceAPI.Services {
                 );
 
                 if(!File.Exists(ultimatumDir))
-                    throw new Exception("there is no parsed file to store");
+                    throw new FileNotFoundException();
 
                 toSave = JsonSerializer.Deserialize<List<Insured>>(json, JSONopt);
 
@@ -139,7 +139,7 @@ namespace InsuranceAPI.Services {
             string path = Path.Combine(filesDir, "ultimatum.json");
 
             if(!File.Exists(path))
-                throw new Exception("there is no parsed file to remove");
+                throw new FileNotFoundException();
 
             File.Delete(path);
         }

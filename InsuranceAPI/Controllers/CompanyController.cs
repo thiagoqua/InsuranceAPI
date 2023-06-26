@@ -15,6 +15,10 @@ namespace InsuranceAPI.Controllers {
             _service = service;
         }
 
+        /// <summary>Gets all the companies</summary>
+        /// <returns>The list of all companies</returns>
+        /// <response code="200">Returns the list of all companies</response>
+        /// <response code="401">JWT token is missing or invalid</response>
         [HttpGet]
         [Route("all")]
         public IActionResult all() {

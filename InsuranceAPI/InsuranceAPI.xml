@@ -1,0 +1,157 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>InsuranceAPI</name>
+    </assembly>
+    <members>
+        <member name="M:InsuranceAPI.Controllers.AuthenticationController.login(InsuranceAPI.Models.LoginRequest)">
+            <summary>Authenticates an admin user</summary>
+            <param name="request">The request payload</param>
+            <response code="200">User's authentication succesfull</response>
+            <response code="400">User not found</response>
+            <response code="500">There was an error in the authentication process</response>
+            <returns>The requester' admin data</returns>
+        </member>
+        <member name="M:InsuranceAPI.Controllers.CompanyController.all">
+            <summary>Gets all the companies</summary>
+            <returns>The list of all companies</returns>
+            <response code="200">Returns the list of all companies</response>
+            <response code="401">JWT token is missing or invalid</response>
+        </member>
+        <member name="M:InsuranceAPI.Controllers.FileController.upload(Microsoft.AspNetCore.Http.IFormFile)">
+            <summary>Map an input file into database objects</summary>
+            <param name="file">Excel file to parse</param>
+            <returns>
+                An object that contains the list of interpreted insureds and the number of rows
+                that hasn't been interpreted
+            </returns>
+            <response code="200">
+                Returns an object that contains the list of interpreted insureds and the number of rows
+                that hasn't been interpreted
+            </response>
+            <response code="401">JWT token is missing or invalid</response>
+        </member>
+        <member name="M:InsuranceAPI.Controllers.FileController.store">
+            <summary>Stores the parsed items</summary>
+            <remarks>
+                The interpreted items are stored in a file called "ultimatum.json". For integration
+                and security reasons, that file is deleted 1 minute after it is created.
+                This endpoint read the file if exists and insert it into the database.
+            </remarks>
+            <response code="200">The changes have been applied successfully</response>
+            <response code="401">JWT token is missing or invalid</response>
+            <response code="503">The file where the interpreted insureds are stored doesn't exist anymore</response>
+            <response code="500">There was an error inserting the changes</response>
+        </member>
+        <member name="M:InsuranceAPI.Controllers.FileController.cancel">
+            <summary>Cancels the data importing process</summary>
+            <remarks>
+                This endpoint deletes the "ultimatum.json" file if existis.
+            </remarks>
+            <response code="200">The cancelation has been successfull</response>
+            <response code="401">JWT token is missing or invalid</response>
+            <response code="500">There was an error during the cancelation</response>
+        </member>
+        <member name="M:InsuranceAPI.Controllers.FileController.export(System.Nullable{System.Boolean},System.Nullable{System.Boolean})">
+            <summary>
+                Exports all the insureds records to a file
+            </summary>
+            <param name="PDF">True if the exported report must be in PDF format</param>
+            <param name="XLSX">True if the exported report must be in Excel format</param>
+            <returns>The corresponding file containing the data</returns>
+            <response code="200">Returns the corresponding file containing the data</response>
+            <response code="400">There is an error in the query params</response>
+            <response code="401">JWT token is missing or invalid</response>
+            <response code="500">There was an error creating the file</response>
+        </member>
+        <member name="M:InsuranceAPI.Controllers.FileController.getAllBackups">
+            <summary>Gets all the backups availables</summary>
+            <remarks>
+                A backup is created after the insureds table is fully dropped. That case happens
+                only when importing insureds from a file. 
+            </remarks>
+            <returns>The list with all the backup's created dates</returns>
+            <response code="200">Returns the list with all the backup's created dates</response>
+            <response code="401">JWT token is missing or invalid</response>
+            <response code="500">There was an error parsing the backups files</response>
+        </member>
+        <member name="M:InsuranceAPI.Controllers.FileController.applyBackup(System.String)">
+            <summary>Applies the data from a backup to the database</summary>
+            <param name="name">The backup's date and time to apply</param>
+            <response code="200">The changes have been applied successfully</response>
+            <response code="401">JWT token is missing or invalid</response>
+            <response code="500">There was an error applying changes</response>
+        </member>
+        <member name="M:InsuranceAPI.Controllers.InsuredController.all">
+            <summary>Gets all the insureds</summary>
+            <returns>The list of all insureds</returns>
+            <response code="200">Returns the list of all insureds</response>
+            <response code="401">JWT token is missing or invalid</response>
+        </member>
+        <member name="M:InsuranceAPI.Controllers.InsuredController.match(System.String)">
+            <summary>Looks for an insured</summary>
+            <param name="query">The input string to match</param>
+            <returns>
+                The list with the insureds whose firstname or surname matches the query
+            </returns>
+            <response code="200">
+                The list with the insureds whose firstname or surname matches the query.
+                If there is not insureds to match, returns an empty list.
+            </response>
+            <response code="401">JWT token is missing or invalid</response>
+        </member>
+        <member name="M:InsuranceAPI.Controllers.InsuredController.getById(System.Int64)">
+            <summary>Gets an insured by its id</summary>
+            <param name="id">The requested insured's id</param>
+            <returns>The insured requested</returns>
+            <response code="200">Returns the insured requested</response>
+            <response code="401">JWT token is missing or invalid</response>
+            <response code="404">An insured with the given id is not found</response>
+        </member>
+        <member name="M:InsuranceAPI.Controllers.InsuredController.create(InsuranceAPI.Models.Insured)">
+            <summary>Creates a new insured</summary>
+            <param name="insured">The new insured's payload</param>
+            <response code="200">The insured was created successfully</response>
+            <response code="400">The given payload is null</response>
+            <response code="401">JWT token is missing or invalid</response>
+            <response code="500">There was an error creating the insured</response>
+        </member>
+        <member name="M:InsuranceAPI.Controllers.InsuredController.update(InsuranceAPI.Models.Insured)">
+            <summary>Update the insured's data</summary>
+            <param name="insured">The updated insured payload</param>
+            <response code="200">The changes has been applied successfully</response>
+            <response code="400">The given payload is null</response>
+            <response code="401">JWT token is missing or invalid</response>
+            <response code="500">There was an error updating the insured</response>
+        </member>
+        <member name="M:InsuranceAPI.Controllers.InsuredController.delete(System.Int64)">
+            <summary>Deletes an insured by its id</summary>
+            <param name="id">The insured's id to be deleted</param>
+            <response code="200">The insured has been deleted successfully</response>
+            <response code="401">JWT token is missing or invalid</response>
+            <response code="500">There was an error deleting the insured</response>
+        </member>
+        <member name="M:InsuranceAPI.Helpers.ExcelHandler.mapAddressFromExcelRow(NPOI.SS.UserModel.IRow)">
+            <summary>
+                It receives 
+            </summary>
+            <param name="row">Excel document's row</param>
+            <returns>An address with the data in the row</returns>
+            <exception cref="T:InsuranceAPI.Exceptions.MappingException">
+                If cell 5 doesn't have the format: _street _number P _floor DTO _dpt.
+            </exception>
+        </member>
+        <member name="M:InsuranceAPI.Services.FileService.startTimer">
+            <summary>
+                Starts a timer and wait 1 minute for the user to confirm
+                or cancel the changes. If the user doesn't cancel or confirm the changes, 
+                it deletes the 'ultimatum.json' file.
+            </summary>
+        </member>
+        <member name="M:InsuranceAPI.Services.FileService.getBackupsDates">
+                     * The idea is to quit the above methods from here and put it in another
+                     * server
+                    *
+        </member>
+    </members>
+</doc>
