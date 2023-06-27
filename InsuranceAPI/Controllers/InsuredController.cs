@@ -114,10 +114,10 @@ namespace InsuranceAPI.Controllers {
             }
         }
 
-        //[HttpGet]
-        //[Route("test")]
-        //public IActionResult test() {
-        //    return Ok("funca?");
-        //}
+        [HttpGet]
+        [Route("test")]
+        public IActionResult test() {
+            return Ok("funca?");
+        }
     }
 }

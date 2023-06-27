@@ -1,0 +1,18 @@
+version: '3.4'
+
+networks:
+  insurance-net:
+services:
+  insuranceapi:
+    networks: 
+    - insurance-net
+    build: ./insuranceapi
+    container_name: insurance_api
+    ports:
+    - 5000:80 
+  insurancedb:
+    networks: 
+    - insurance-net
+    image: db
+    build: ./insurancedb
+    container_name: insurance_db

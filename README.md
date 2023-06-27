@@ -6,7 +6,6 @@ The API has 4 controllers:
 - The Company controller
 - The Authentication controller
 - The File controller
-<br/>
 
 Unless the Authentication controller, the rest of them require a **Bearer Token authentication** to be accesed.
 The function of each one is nested to its name, and you can see and test each endpoint from them using accessing the SwaggerUI url: `<host>:<port>/swagger/index.html`.
@@ -14,7 +13,7 @@ The function of each one is nested to its name, and you can see and test each en
 ## Running database with Docker
 1. go to the InsuranceDB directory
 2. build the container: `docker build -t database:test .`
-3. run the container: `docker run -p 1433:1433 --name db -d database:test`
+3. run the container: `docker run -p 1433:1433 --name insurance-db -d database:test`
 4. go to the InsuranceAPI directory and run the project: `dotnet run`
 
 ## Structure of the Excel file to parse

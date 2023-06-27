@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace InsuranceAPI.Models;
 
@@ -10,6 +11,7 @@ public partial class Admin
 
     public string Username { get; set; } = null!;
 
+    [JsonIgnore]
     public string Password { get; set; } = null!;
 
     public string? Token { get; set; }
