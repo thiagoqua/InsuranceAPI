@@ -3,7 +3,7 @@
 namespace InsuranceAPI.Repositories {
     public interface IProducerRepository {
         public List<Producer> getAll();
-        public Producer getById(long id);
+        public Producer? getById(long id);
         public List<Producer> getByIds(List<long> ids);
         public Producer? getByName(string name);
     }
@@ -19,10 +19,10 @@ namespace InsuranceAPI.Repositories {
             return _context.Producers.ToList();
         }
 
-        public Producer getById(long id) {
+        public Producer? getById(long id) {
             return (from prod in _context.Producers
                     where prod.Id == id
-                    select prod).First();
+                    select prod).FirstOrDefault();
         }
 
         public List<Producer> getByIds(List<long> ids) {

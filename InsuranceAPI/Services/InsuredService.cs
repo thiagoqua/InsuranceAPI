@@ -2,6 +2,7 @@
 using InsuranceAPI.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Org.BouncyCastle.Asn1.Esf;
+using System.ComponentModel.Design;
 
 namespace InsuranceAPI.Services {
     public interface IInsuredService {
@@ -13,18 +14,24 @@ namespace InsuranceAPI.Services {
         public void update(Insured insured);
         public void delete(long id,bool commit);
         public void deleteMultiple(List<long> insuredIds);
+        public Task<List<Insured>> getByFilters(string?[] filters);
     }
 
     public class InsuredService : IInsuredService{
         private readonly IInsuredRepository _insuredRepo;
         private readonly IAddressRepository _addressRepo;
         private readonly IPhoneRepository _phoneRepo;
+        private readonly ICompanyRepository _companyRepo;
+        private readonly IProducerRepository _producerRepo;
 
         public InsuredService(IInsuredRepository repo,IAddressRepository addrRepo,
-                                IPhoneRepository phRepo) { 
+                                IPhoneRepository phRepo,ICompanyRepository companyRepo,
+                                IProducerRepository producerRepo) { 
             _insuredRepo = repo;
             _addressRepo = addrRepo;
             _phoneRepo = phRepo;
+            _companyRepo = companyRepo;
+            _producerRepo = producerRepo;
         }
 
         public List<Insured> getAll() {
@@ -88,6 +95,80 @@ namespace InsuranceAPI.Services {
                 delete(id, false);
 
             _insuredRepo.commit();
+        }
+
+        private bool checkLifeFormat(string life) {
+            //format is dd/mm
+            if(life.Length != 5)
+                return false;
+            if(life.ElementAt(2) != '/')
+                return false;
+
+            foreach(char c in life) {
+                if(c == '/') 
+                    continue;
+                if(!char.IsDigit(c))
+                    return false;
+            }
+
+            return true;
+        }
+
+        public async Task<List<Insured>> getByFilters(string?[] filters) {
+            bool allNulls = true;
+            
+            foreach(string? filter in filters) {
+                allNulls = allNulls && filter == null;
+            }
+
+            if(allNulls)
+                throw new ArgumentException();
+
+            return await Task.Run(() => {
+                IQueryable<Insured> allInsureds = _insuredRepo.getAllQueryables();
+
+                // COMPANY FILTER
+                if(filters[0] != null) {     
+                    long companyId = Convert.ToInt64(filters[0]);
+                    if(_companyRepo.getById(companyId) == null)
+                        throw new ArgumentException();
+
+                    allInsureds = allInsureds
+                        .Where(ins => ins.Company == companyId);
+                }
+
+                // PRODUCER FILTER
+                if(filters[1] != null) {
+                    long producerId = Convert.ToInt64(filters[1]);
+                    if(_producerRepo.getById(producerId) == null)
+                        throw new ArgumentException();
+
+                    allInsureds = allInsureds
+                        .Where(ins => ins.Producer == producerId);
+                }
+
+                // LIFE START FILTER
+                if(filters[2] != null) {
+                    string life = filters[2].Replace(' ','/');
+                    if(!checkLifeFormat(life))
+                        throw new ArgumentException();
+
+                    allInsureds = allInsureds
+                        .Where(ins => ins.Life.StartsWith(life));
+                }
+
+                // POLICY STATUS FILTER
+                if(filters[3] != null) {
+                    if(!(filters[3] == "ACTIVA") &&
+                       !(filters[3] == "EN JUICIO")&&
+                       !(filters[3] == "ANULADA"))
+                        throw new ArgumentException();
+                    allInsureds = allInsureds
+                        .Where(ins => ins.Status == filters[3]);
+                }
+
+                return allInsureds.ToList();
+            });
         }
     }
 }

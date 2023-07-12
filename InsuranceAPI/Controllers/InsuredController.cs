@@ -61,6 +61,31 @@ namespace InsuranceAPI.Controllers {
                     NotFound();
         }
 
+        /// <summary>Gets the insureds with the given filters</summary>
+        /// <param name="company" example="1">The comany's id to filter</param>
+        /// <param name="producer" example="2">The producer's id to filter</param>
+        /// <param name="lifestart" example="18+05">The starting insured's policy life to filter</param>
+        /// <param name="status" example="ANULADA">The insured's policy status to filter</param>
+        /// <response code="200">The insured's list according the filters</response>
+        /// <response code="400">All the filters or one of them are not correct</response>
+        /// <response code="401">JWT token is missing or invalid</response>
+        [HttpGet]
+        [Route("filter")]
+        [ProducesResponseType(typeof(List<Insured>), 200)]
+        public async Task<IActionResult> filter(
+            [FromQuery] string? company, [FromQuery] string? producer,
+            [FromQuery] string? lifestart, [FromQuery] string? status) {
+            try {
+                List<Insured> ret = await _service.getByFilters(new string?[] {
+                        company, producer, lifestart, status
+                });
+
+                return Ok(ret);
+            } catch(ArgumentException) {
+                return BadRequest();
+            }
+        }
+
         /// <summary>Creates a new insured</summary>
         /// <param name="insured">The new insured's payload</param>
         /// <response code="200">The insured was created successfully</response>
@@ -115,12 +140,6 @@ namespace InsuranceAPI.Controllers {
             } catch(Exception ex) {
                 return StatusCode(500,ex.Message);
             }
-        }
-
-        [HttpGet]
-        [Route("test")]
-        public IActionResult test() {
-            return Ok("funca?");
         }
     }
 }

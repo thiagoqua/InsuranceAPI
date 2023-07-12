@@ -1,10 +1,12 @@
 ﻿using InsuranceAPI.Models;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.Design;
 using System.Data.Common;
 
 namespace InsuranceAPI.Repositories {
     public interface IInsuredRepository {
         public List<Insured> getAll();
+        public IQueryable<Insured> getAllQueryables();
         public List<Insured> search(string query);
         public Insured? findById(long id);
         public void create(Insured insured);
@@ -31,13 +33,16 @@ namespace InsuranceAPI.Repositories {
         }
 
         public List<Insured> getAll() {
+            return getAllQueryables().ToList();
+        }
+
+        public IQueryable<Insured> getAllQueryables() {
             return _context.Insureds
                 .Include(ins => ins.AddressNavigation)
                 .Include(ins => ins.ProducerNavigation)
                 .Include(ins => ins.Phones)
                 .Include(ins => ins.CompanyNavigation)
-                .OrderBy(ins => ins.Lastname)
-                .ToList();
+                .OrderBy(ins => ins.Lastname);
         }
 
         public List<Insured> search(string query) {
@@ -46,8 +51,7 @@ namespace InsuranceAPI.Repositories {
                             (ins.Lastname + " " + ins.Firstname).Contains(query) ||
                              ins.Firstname.Contains(query) || 
                              ins.Lastname.Contains(query))
-                    select ins
-                    )
+                    select ins)
                     .Include(ins => ins.AddressNavigation)
                     .Include(ins => ins.ProducerNavigation)
                     .Include(ins => ins.Phones)
@@ -57,7 +61,6 @@ namespace InsuranceAPI.Repositories {
 
         public Insured? findById(long id) {
             return _context.Insureds
-                    .Include(i => i.AddressNavigation)
                     .Include(ins => ins.AddressNavigation)
                     .Include(ins => ins.ProducerNavigation)
                     .Include(ins => ins.CompanyNavigation)
