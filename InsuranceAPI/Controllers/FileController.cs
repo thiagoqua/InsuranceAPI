@@ -36,6 +36,7 @@ namespace InsuranceAPI.Controllers {
         ///     that hasn't been interpreted
         /// </response>
         /// <response code="401">JWT token is missing or invalid</response>
+        [ProducesResponseType(typeof(ExcelDataResultDTO), 200)]
         [HttpPost,DisableRequestSizeLimit]
         [Route("upload")]
         public async Task<IActionResult> upload([Required] IFormFile file) {
@@ -94,6 +95,7 @@ namespace InsuranceAPI.Controllers {
         /// <response code="400">There is an error in the query params</response>
         /// <response code="401">JWT token is missing or invalid</response>
         /// <response code="500">There was an error creating the file</response>
+        [ProducesResponseType(typeof(File), 200)]
         [HttpGet]
         [Route("export")]
         public async Task<IActionResult> export([FromQuery] bool? PDF, 
@@ -134,6 +136,7 @@ namespace InsuranceAPI.Controllers {
         /// <response code="200">Returns the list with all the backup's created dates</response>
         /// <response code="401">JWT token is missing or invalid</response>
         /// <response code="500">There was an error parsing the backups files</response>
+        [ProducesResponseType(typeof(List<string>), 200)]
         [HttpGet]
         [Route("backup/all")]
         public IActionResult getAllBackups() {
@@ -151,6 +154,7 @@ namespace InsuranceAPI.Controllers {
         /// <response code="200">The changes have been applied successfully</response>
         /// <response code="401">JWT token is missing or invalid</response>
         /// <response code="500">There was an error applying changes</response>
+        [ProducesResponseType(typeof(List<Insured>), 200)]
         [HttpGet]
         [Route("backup/data")]
         public async Task<IActionResult> applyBackup([FromQuery] [Required] string name) {

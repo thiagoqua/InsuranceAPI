@@ -19,10 +19,11 @@ namespace InsuranceAPI.Controllers {
 
         /// <summary>Gets all the insureds</summary>
         /// <returns>The list of all insureds</returns>
-        /// <response code="200">Returns the list of all insureds</response>
+        /// <response code="200">Returns all the insureds</response>
         /// <response code="401">JWT token is missing or invalid</response>
         [HttpGet]
         [Route("all")]
+        [ProducesResponseType(typeof(List<Insured>), 200)]
         public IActionResult all() { 
             return Ok(_service.getAll());
         }
@@ -39,6 +40,7 @@ namespace InsuranceAPI.Controllers {
         /// <response code="401">JWT token is missing or invalid</response>
         [HttpGet]
         [Route("search")]
+        [ProducesResponseType(typeof(List<Insured>), 200)]
         public IActionResult match([FromQuery] [Required] string query) {
             return Ok(_service.getFromSearch(query));
         }
@@ -51,6 +53,7 @@ namespace InsuranceAPI.Controllers {
         /// <response code="404">An insured with the given id is not found</response>
         [HttpGet]
         [Route("{id:long}")]
+        [ProducesResponseType(typeof(Insured), 200)]
         public IActionResult getById(long id) {
             var ret = _service.getById(id);
             return ret != null ?
@@ -69,7 +72,7 @@ namespace InsuranceAPI.Controllers {
         public IActionResult create([FromBody] [Required] Insured insured) {
             if(insured == null)
                 return BadRequest();
-            
+
             try {
                 _service.create(insured,true);
                 return Ok();

@@ -10,6 +10,11 @@
             <response code="200">User's authentication succesfull</response>
             <response code="400">User not found</response>
             <response code="500">There was an error in the authentication process</response>
+        </member>
+        <member name="M:InsuranceAPI.Controllers.AuthenticationController.checkTokenValidation">
+            <summary>Checks the validation of an specific JWT</summary>
+            <response code="200">Token is valid</response>
+            <response code="401">Token is not valid</response>
             <returns>The requester' admin data</returns>
         </member>
         <member name="M:InsuranceAPI.Controllers.CompanyController.all">
@@ -85,7 +90,7 @@
         <member name="M:InsuranceAPI.Controllers.InsuredController.all">
             <summary>Gets all the insureds</summary>
             <returns>The list of all insureds</returns>
-            <response code="200">Returns the list of all insureds</response>
+            <response code="200">Returns all the insureds</response>
             <response code="401">JWT token is missing or invalid</response>
         </member>
         <member name="M:InsuranceAPI.Controllers.InsuredController.match(System.String)">

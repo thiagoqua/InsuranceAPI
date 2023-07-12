@@ -1,4 +1,5 @@
-﻿using InsuranceAPI.Services;
+﻿using InsuranceAPI.Models;
+using InsuranceAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
@@ -19,6 +20,7 @@ namespace InsuranceAPI.Controllers {
         /// <returns>The list of all companies</returns>
         /// <response code="200">Returns the list of all companies</response>
         /// <response code="401">JWT token is missing or invalid</response>
+        [ProducesResponseType(typeof(List<Company>), 200)]
         [HttpGet]
         [Route("all")]
         public IActionResult all() {

@@ -25,7 +25,7 @@ namespace InsuranceAPI.Controllers {
         /// <response code="200">User's authentication succesfull</response>
         /// <response code="400">User not found</response>
         /// <response code="500">There was an error in the authentication process</response>
-        /// <returns>The requester' admin data</returns>
+        [ProducesResponseType(typeof(Admin),200)]
         [HttpPost]
         public async Task<IActionResult> login([FromBody] [Required] LoginRequest request) {
             try {
@@ -36,6 +36,18 @@ namespace InsuranceAPI.Controllers {
             } catch(Exception) {
                 return StatusCode(500);
             }
+        }
+
+        /// <summary>Checks the validation of an specific JWT</summary>
+        /// <response code="200">Token is valid</response>
+        /// <response code="401">Token is not valid</response>
+        /// <returns>The requester' admin data</returns>
+        [Authorize]
+        [EnableCors("everything")]
+        [HttpGet]
+        [Route("check")]
+        public IActionResult checkTokenValidation() {
+            return Ok();
         }
 
         //[HttpGet]

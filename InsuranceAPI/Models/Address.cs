@@ -18,10 +18,13 @@ public partial class Address{
 
     public string? Departament { get; set; }
 
+    [Required]
     public string City { get; set; } = null!;
 
+    [Required]
     public string Province { get; set; } = null!;
 
+    [Required]
     public string Country { get; set; } = null!;
 
     [JsonIgnore]
