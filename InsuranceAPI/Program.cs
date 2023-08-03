@@ -49,11 +49,11 @@ builder.Services.AddSwaggerGen(config => {
 });
 builder.Services.AddDbContext<DbInsuranceContext>(opt => {
     //DB in DESKTOP
-    opt.UseSqlServer(builder.Configuration.GetConnectionString("desktopDB"));
+    //opt.UseSqlServer(builder.Configuration.GetConnectionString("desktopDB"));
     //DB in DOCKER
     //opt.UseSqlServer(builder.Configuration.GetConnectionString("dockerDB"));
     //DB and API in DOCKER
-    //opt.UseSqlServer(builder.Configuration.GetConnectionString("docker-netDB"));
+    opt.UseSqlServer(builder.Configuration.GetConnectionString("docker-netDB"));
 }
 );
 

@@ -113,6 +113,16 @@
             <response code="401">JWT token is missing or invalid</response>
             <response code="404">An insured with the given id is not found</response>
         </member>
+        <member name="M:InsuranceAPI.Controllers.InsuredController.filter(System.String,System.String,System.String,System.String)">
+            <summary>Gets the insureds with the given filters</summary>
+            <param name="company" example="1">The comany's id to filter</param>
+            <param name="producer" example="2">The producer's id to filter</param>
+            <param name="lifestart" example="18+05">The starting insured's policy life to filter</param>
+            <param name="status" example="ANULADA">The insured's policy status to filter</param>
+            <response code="200">The insured's list according the filters</response>
+            <response code="400">All the filters or one of them are not correct</response>
+            <response code="401">JWT token is missing or invalid</response>
+        </member>
         <member name="M:InsuranceAPI.Controllers.InsuredController.create(InsuranceAPI.Models.Insured)">
             <summary>Creates a new insured</summary>
             <param name="insured">The new insured's payload</param>
@@ -135,16 +145,6 @@
             <response code="200">The insured has been deleted successfully</response>
             <response code="401">JWT token is missing or invalid</response>
             <response code="500">There was an error deleting the insured</response>
-        </member>
-        <member name="M:InsuranceAPI.Controllers.InsuredController.filter(System.String,System.String,System.String,System.String)">
-            <summary>Gets the insureds with the given filters</summary>
-            <param name="company" example="1">The comany's id to filter</param>
-            <param name="producer" example="2">The producer's id to filter</param>
-            <param name="lifestart" example="18+05">The starting insured's policy life to filter</param>
-            <param name="status" example="ANULADA">The insured's policy status to filter</param>
-            <response code="200">The insured's list according the filters</response>
-            <response code="400">All the filters or one of them are not correct</response>
-            <response code="401">JWT token is missing or invalid</response>
         </member>
         <member name="M:InsuranceAPI.Helpers.ExcelHandler.mapAddressFromExcelRow(NPOI.SS.UserModel.IRow)">
             <summary>
