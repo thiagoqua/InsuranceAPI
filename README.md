@@ -15,10 +15,12 @@ The function of each one is nested to its name, and you can see and test each en
 1. go to the InsuranceDB directory
 2. build the container: `docker build -t database:test .`
 3. run the container: `docker run -p 1433:1433 --name insurance-db -d database:test`
-4. go to the InsuranceAPI directory and run the project: `dotnet run`
+4. go to the InsuranceAPI directory and run install the needed dependencies: `dotnet restore`
+5. run the project: `dotnet run`
 
-## the hole API in Docker, incluiding the database
-**TODO**
+## the hole API in Docker with Docker-Compose, incluiding the database
+1. go to the main directory
+2. run the app: `docker-compose up`
 
 ## Structure of the Excel file to parse
 | LICENSE[^5] | FOLDER | LIFE | CLIENT | BORN | ADDRESS | STATE | VTO | CITY | DNI | PHONES[^6] *description* | DESCRIPTION | CUIT | PRODUCER

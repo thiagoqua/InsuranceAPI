@@ -54,12 +54,10 @@ public partial class Insured
     [Required]
     public virtual Address AddressNavigation { get; set; } = null!;
 
-    [Required]
     public virtual Company CompanyNavigation { get; set; } = null!;
 
     [Required]
     public virtual ICollection<Phone> Phones { get; set; } = new List<Phone>();
 
-    [Required]
     public virtual Producer ProducerNavigation { get; set; } = null!;
 }

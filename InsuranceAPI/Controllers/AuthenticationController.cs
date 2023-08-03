@@ -33,7 +33,7 @@ namespace InsuranceAPI.Controllers {
                 return Ok(ret);
             } catch(BadUserException) {
                 return BadRequest();
-            } catch(Exception) {
+            } catch(Exception ex) {
                 return StatusCode(500);
             }
         }
@@ -54,7 +54,7 @@ namespace InsuranceAPI.Controllers {
         //[Route("password")]
         //public IActionResult createPass([FromQuery] string psw) {
         //    string hash = BCrypt.Net.BCrypt.HashPassword(psw);
-        //    return Ok(new { 
+        //    return Ok(new {
         //        hashed = hash,
         //        isEquals = BCrypt.Net.BCrypt.Verify(psw, hash)
         //    });

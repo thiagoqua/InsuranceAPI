@@ -53,7 +53,9 @@ builder.Services.AddDbContext<DbInsuranceContext>(opt => {
     //DB in DOCKER
     //opt.UseSqlServer(builder.Configuration.GetConnectionString("dockerDB"));
     //DB and API in DOCKER
-    opt.UseSqlServer(builder.Configuration.GetConnectionString("docker-netDB"));
+    //opt.UseSqlServer(builder.Configuration.GetConnectionString("docker-netDB"));
+    //DB in Hosting
+    opt.UseSqlServer(builder.Configuration.GetConnectionString("cloudDB"));
 }
 );
 
