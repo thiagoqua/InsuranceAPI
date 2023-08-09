@@ -1,11 +1,18 @@
 ## The previous commits releated to the API are [here](https://github.com/thiagoqua/InsuranceWebApp/tree/aa9c2b126a7dc63996c4da5485a18d15355887a5)
 
+## API hosted [here](http://insuranceapi.somee.com/swagger/index.html)
+
+## API'S credentials 
+`username`:`tiki`
+`password`:`admin`
+
 ## API overall explanation
-The API has 4 controllers:
+The API has 5 controllers:
 - The Insured controller
 - The Company controller
 - The Authentication controller
 - The File controller
+- The Producer controller
 
 Unless the Authentication controller, the rest of them require a **Bearer Token authentication** to be accesed.
 The function of each one is nested to its name, and you can see and test each endpoint from them using accessing the SwaggerUI url: `<host>:<port>/swagger/index.html`.

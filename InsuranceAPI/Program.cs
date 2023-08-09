@@ -64,6 +64,7 @@ builder.Services.AddScoped<IInsuredService, InsuredService>();
 builder.Services.AddScoped<IInsuredRepository, InsuredRepository>();
 builder.Services.AddScoped<IAddressRepository,AddressRepository>();
 builder.Services.AddScoped<IPhoneRepository, PhoneRepository>();
+builder.Services.AddScoped<IProducerService, ProducerService>();
 builder.Services.AddScoped<IProducerRepository, ProducerRepository>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<ICompanyRepository, CompanyRepository>();

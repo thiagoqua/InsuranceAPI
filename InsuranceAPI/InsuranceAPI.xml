@@ -146,6 +146,12 @@
             <response code="401">JWT token is missing or invalid</response>
             <response code="500">There was an error deleting the insured</response>
         </member>
+        <member name="M:InsuranceAPI.Controllers.ProducerController.all">
+            <summary>Gets all the producers</summary>
+            <returns>The list of all producers</returns>
+            <response code="200">Returns the list of all producers</response>
+            <response code="401">JWT token is missing or invalid</response>
+        </member>
         <member name="M:InsuranceAPI.Helpers.ExcelHandler.mapAddressFromExcelRow(NPOI.SS.UserModel.IRow)">
             <summary>
                 It receives 
