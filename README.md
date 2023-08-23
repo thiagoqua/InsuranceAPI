@@ -2,11 +2,12 @@
 
 ## API hosted [here](http://insuranceapi.somee.com/swagger/index.html)
 
-## API'S credentials 
+## API's credentials 
 `username`:`tiki`
+<br/>
 `password`:`admin`
 
-## API overall explanation
+# API overall explanation
 The API has 5 controllers:
 - The Insured controller
 - The Company controller
@@ -30,14 +31,14 @@ The function of each one is nested to its name, and you can see and test each en
 2. run the app: `docker-compose up`
 
 ## Structure of the Excel file to parse
-| LICENSE[^5] | FOLDER | LIFE | CLIENT | BORN | ADDRESS | STATE | VTO | CITY | DNI | PHONES[^6] *description* | DESCRIPTION | CUIT | PRODUCER
-| ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | 
-| string | number | dd/mm-dd/mm | lastnames firstname *!(string)[^1]* | dd/mm/yyyy | street number *!P[^2] number* *!DTO[^3] number* | ACTIVA or ANULADA or EN JUICIO | number | string | !DNI number or LE number | number or number !(string)[^4] | *string* | *string* | string[^7]
+| LICENSE | COMPANY |FOLDER | LIFE | CLIENT | BORN | ADDRESS | STATE | VTO | CITY | DNI | PHONES[^6] *description* | DESCRIPTION | CUIT | PRODUCER
+| ------- | ------- |------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | 
+| string | string[^5] | number | dd/mm-dd/mm | lastnames firstname *!(string)[^1]* | dd/mm/yyyy | street number *!P[^2] number* *!DTO[^3] number* | ACTIVA or ANULADA or EN JUICIO | number | string | !DNI number or LE number | number or number !(string)[^4] | *string* | *string* | string[^7]
 [^1]: the string between braces is the insured policy
 [^2]: indicates the floor
 [^3]: indicates the departament
 [^4]: the string between braces is the description of the number phone
-[^5]: the fill background color of this cell determines in which company the person is insured. It always need to be a color. In the case that the cell has blank color, verify that the background color is setted to <mark>white</mark> and it is not setted to <mark>no fill</mark>
+[^5]: an abbreviation of the company's name. in the case, could be 'COOP' or 'FEDPAT'.
 [^6]: if there are more than one phone for an insured, they have to be separated by '/'.
 [^7]: this string contains the producer's name, and it needs to match with one of the corresponding producers stored in the database.
 The *italized text* means that that property is optional

@@ -101,28 +101,28 @@ namespace InsuranceAPI.Helpers {
 
         private Insured mapFromExcelRow(IRow row, int rowNumber) {
             try{
-                string[]? namesPolicy = mapNameOrPolicyFromExcelRow(row.GetCell(3).ToString());
-                Company company = mapCompanyFromExcelRow(row.GetCell(0).CellStyle.FillForegroundColorColor);
-                Producer producer = mapProducerFromExcelRow(row.GetCell(13).ToString());
+                string[]? namesPolicy = mapNameOrPolicyFromExcelRow(row.GetCell(4).ToString());
+                Company company = mapCompanyFromExcelRow(row.GetCell(1).ToString());
+                Producer producer = mapProducerFromExcelRow(row.GetCell(14).ToString());
                 Insured ret = new Insured(){
                     License = mapStringFromExcelRow(row.GetCell(0).ToString()),
-                    Folder = mapFolderFromExcelRow(row.GetCell(1).ToString()),
-                    Life = mapStringFromExcelRow(row.GetCell(2).ToString()),
+                    Folder = mapFolderFromExcelRow(row.GetCell(2).ToString()),
+                    Life = mapStringFromExcelRow(row.GetCell(3).ToString()),
                     Firstname = namesPolicy[0],
                     Lastname = namesPolicy[1],
-                    InsurancePolicy = namesPolicy[2] != null ? namesPolicy[2] : null,
-                    Born = mapBornFromExcelRow(row.GetCell(4).ToString()),
+                    InsurancePolicy = namesPolicy[2],
+                    Born = mapBornFromExcelRow(row.GetCell(5).ToString()),
                     AddressNavigation = mapAddressFromExcelRow(row),
-                    Dni = mapDNIFromExcelRow(row.GetCell(9).ToString()),
-                    Phones = mapPhonesFromExcelRow(row.GetCell(10).ToString()),
-                    Description = mapDescriptionFromExcelRow(row.GetCell(11).ToString()),
-                    Cuit = row.GetCell(12).ToString(),
+                    Dni = mapDNIFromExcelRow(row.GetCell(10).ToString()),
+                    Phones = mapPhonesFromExcelRow(row.GetCell(11).ToString()),
+                    Description = mapDescriptionFromExcelRow(row.GetCell(12).ToString()),
+                    Cuit = row.GetCell(13).ToString(),
                     Producer = producer.Id,
                     ProducerNavigation = producer,
                     CompanyNavigation = company,
                     Company = company.Id,
-                    Status = mapStringFromExcelRow(row.GetCell(6).ToString()),
-                    PaymentExpiration = mapPaymentExpirationFromExcelRow(row.GetCell(7).ToString())
+                    Status = mapStringFromExcelRow(row.GetCell(7).ToString()),
+                    PaymentExpiration = mapPaymentExpirationFromExcelRow(row.GetCell(8).ToString())
                 };
                 return ret;
             }
@@ -223,11 +223,11 @@ namespace InsuranceAPI.Helpers {
         ///     If cell 5 doesn't have the format: _street _number P _floor DTO _dpt.
         /// </exception>
         private Models.Address mapAddressFromExcelRow(IRow row) {
-            string[]? cell = row.GetCell(5).ToString()?.Split(" ");
+            string[]? cell = row.GetCell(6).ToString()?.Split(" ");
             string? street, number, city, province, country, departament;
             int numberStartIndex, floor;
 
-            city = mapStringFromExcelRow(row.GetCell(8).ToString());
+            city = mapStringFromExcelRow(row.GetCell(9).ToString());
             province = "Santa Fe";
             country = "Argentina";
             departament = null;
@@ -332,18 +332,16 @@ namespace InsuranceAPI.Helpers {
             return ret;
         }
 
-        private Company mapCompanyFromExcelRow(IColor backgroundColor) {
-            Company? ret;
-            if(backgroundColor == null)
+        private Company mapCompanyFromExcelRow(string? cell) {
+            Company? ret = null;
+            
+            if(cell == null)
                 throw new MappingException("company");
-            byte R, G, B;
-            R = backgroundColor.RGB[0];
-            G = backgroundColor.RGB[1];
-            B = backgroundColor.RGB[2];
+            
             //if the cell's color is white, the company is Federación
-            if(R == 255 && G == 255 && B == 255)
+            if(cell == "FEDPAT")
                 ret = companies!.Find(comp => comp.Id == 2);
-            else
+            else if(cell == "COOP")
                 ret = companies!.Find(comp => comp.Id == 1);
 
             if(ret == null)
