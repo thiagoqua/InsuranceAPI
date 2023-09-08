@@ -1,7 +1,5 @@
 ## The previous commits releated to the API are [here](https://github.com/thiagoqua/InsuranceWebApp/tree/aa9c2b126a7dc63996c4da5485a18d15355887a5)
 
-## API hosted [here](http://insuranceapi.somee.com/swagger/index.html)
-
 ## API's credentials 
 `username`:`tiki`
 <br/>
