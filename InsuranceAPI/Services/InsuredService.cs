@@ -1,4 +1,5 @@
-﻿using InsuranceAPI.Models;
+﻿using InsuranceAPI.Helpers;
+using InsuranceAPI.Models;
 using InsuranceAPI.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Org.BouncyCastle.Asn1.Esf;
@@ -51,6 +52,8 @@ namespace InsuranceAPI.Services {
             Address address = insured.AddressNavigation;
             List<Phone> phones = insured.Phones.ToList();
 
+            InsuredValidator.EnsureValidInsured(insured);
+            
             _addressRepo.create(address);
             _insuredRepo.create(insured);
             _phoneRepo.createMultiple(phones);
